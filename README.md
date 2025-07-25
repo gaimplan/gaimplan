@@ -8,6 +8,8 @@ Here's the breakthrough: Instead of starting from zero with every AI interaction
 
 This isn't "ChatGPT in a notes app." It's the missing infrastructure for human-AI collaboration—where your domain knowledge becomes the foundation for achieving superhuman intelligence.
 
+![Welcome to Gaimplan](docs/gaimplan-welcome-example.jpg)
+
 ---
 
 ## ⚡ What Makes This Different
