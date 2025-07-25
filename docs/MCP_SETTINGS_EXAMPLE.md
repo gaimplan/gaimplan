@@ -34,61 +34,303 @@ Here's an example `mcp_settings.json` file with all bundled MCP servers:
 
 ```json
 {
-  "servers": [
-    {
-      "name": "filesystem-server",
-      "command": "node",
-      "args": [
-        "/Users/REPLACE_USERNAME/Library/Application Support/com.gaimplan.app/mcp-servers/filesystem-server/index.js"
-      ],
-      "env": {
-        "VAULT_PATH": "/path/to/your/vault"
-      }
-    },
-    {
-      "name": "search-server", 
-      "command": "node",
-      "args": [
-        "/Users/REPLACE_USERNAME/Library/Application Support/com.gaimplan.app/mcp-servers/search-server/index.js"
-      ],
-      "env": {
-        "VAULT_PATH": "/path/to/your/vault"
-      }
-    },
-    {
-      "name": "git-server",
-      "command": "node", 
-      "args": [
-        "/Users/REPLACE_USERNAME/Library/Application Support/com.gaimplan.app/mcp-servers/git-server/index.js"
-      ],
-      "env": {
-        "VAULT_PATH": "/path/to/your/vault"
-      }
-    },
-    {
-      "name": "neo4j-server",
-      "command": "node",
-      "args": [
-        "/Users/REPLACE_USERNAME/Library/Application Support/com.gaimplan.app/mcp-servers/neo4j-server/index.js"
-      ],
-      "env": {
-        "NEO4J_URL": "bolt://localhost:7687",
-        "NEO4J_USER": "neo4j",
-        "NEO4J_PASSWORD": "your-password"
-      }
-    },
-    {
-      "name": "qdrant-server",
-      "command": "node",
-      "args": [
-        "/Users/REPLACE_USERNAME/Library/Application Support/com.gaimplan.app/mcp-servers/qdrant-server/index.js"
-      ],
-      "env": {
-        "QDRANT_URL": "http://localhost:6333",
-        "QDRANT_API_KEY": "your-api-key"
+  "settings": {
+    "enabled": true,
+    "servers": {
+      "aura-filesystem": {
+        "capabilities": {
+          "prompts": false,
+          "resources": true,
+          "sampling": false,
+          "tools": true
+        },
+        "enabled": true,
+        "id": "aura-filesystem",
+        "name": "Filesystem Tools",
+        "permissions": {
+          "delete": true,
+          "external_access": false,
+          "read": true,
+          "write": true
+        },
+        "transport": {
+          "args": [
+            "./mcp-servers/filesystem-server/index.js"
+          ],
+          "command": "node",
+          "env": {
+            "VAULT_PATH": "/Users/REPLACE_USERNAME/code/aura-dev/test-vault"
+          },
+          "type": "stdio",
+          "working_dir": null
+        }
+      },
+      "aura-git": {
+        "capabilities": {
+          "prompts": false,
+          "resources": false,
+          "sampling": false,
+          "tools": true
+        },
+        "enabled": false,
+        "id": "aura-git",
+        "name": "Git Version Control",
+        "permissions": {
+          "delete": false,
+          "external_access": true,
+          "read": true,
+          "write": true
+        },
+        "transport": {
+          "args": [
+            "./mcp-servers/git-server/index.js"
+          ],
+          "command": "node",
+          "env": {
+            "VAULT_PATH": "/Users/REPLACE_USERNAME/code/aura-dev/test-vault"
+          },
+          "type": "stdio",
+          "working_dir": null
+        }
+      },
+      "aura-neo4j": {
+        "capabilities": {
+          "prompts": false,
+          "resources": false,
+          "sampling": false,
+          "tools": true
+        },
+        "enabled": true,
+        "id": "aura-neo4j",
+        "name": "Neo4j Knowledge Graph",
+        "permissions": {
+          "delete": false,
+          "external_access": false,
+          "read": true,
+          "write": false
+        },
+        "transport": {
+          "args": [
+            "./mcp-servers/neo4j/index.js"
+          ],
+          "command": "node",
+          "env": {
+            "NEO4J_PASSWORD": "Temp",
+            "NEO4J_URI": "bolt://localhost:7687",
+            "NEO4J_USER": "neo4j",
+            "VAULT_ID": "${VAULT_ID}"
+          },
+          "type": "stdio",
+          "working_dir": null
+        }
+      },
+      "aura-qdrant": {
+        "capabilities": {
+          "prompts": false,
+          "resources": false,
+          "sampling": false,
+          "tools": true
+        },
+        "enabled": true,
+        "id": "aura-qdrant",
+        "name": "Qdrant Semantic Memory",
+        "permissions": {
+          "delete": false,
+          "external_access": false,
+          "read": true,
+          "write": true
+        },
+        "transport": {
+          "args": [
+            "./mcp-servers/qdrant-server/dist/index.js"
+          ],
+          "command": "node",
+          "env": {
+            "QDRANT_URL": "http://localhost:6333",
+            "TRANSFORMERS_CACHE": "./models",
+            "VAULT_ID": "default",
+            "VAULT_NAME": "default"
+          },
+          "type": "stdio",
+          "working_dir": null
+        }
+      },
+      "aura-search": {
+        "capabilities": {
+          "prompts": false,
+          "resources": false,
+          "sampling": false,
+          "tools": true
+        },
+        "enabled": true,
+        "id": "aura-search",
+        "name": "Search & Analysis",
+        "permissions": {
+          "delete": false,
+          "external_access": false,
+          "read": true,
+          "write": false
+        },
+        "transport": {
+          "args": [
+            "./mcp-servers/search-server/index.js"
+          ],
+          "command": "node",
+          "env": {
+            "VAULT_PATH": "/Users/REPLACE_USERNAME/code/aura-dev/test-vault"
+          },
+          "type": "stdio",
+          "working_dir": null
+        }
+      },
+      "gaimplan-filesystem": {
+        "capabilities": {
+          "prompts": false,
+          "resources": true,
+          "sampling": false,
+          "tools": true
+        },
+        "enabled": false,
+        "id": "gaimplan-filesystem",
+        "name": "Filesystem Tools",
+        "permissions": {
+          "delete": true,
+          "external_access": false,
+          "read": true,
+          "write": true
+        },
+        "transport": {
+          "args": [
+            "./mcp-servers/filesystem-server/index.js"
+          ],
+          "command": "node",
+          "env": {
+            "VAULT_PATH": "/Users/REPLACE_USERNAME/code/aura-dev/test-vault"
+          },
+          "type": "stdio",
+          "working_dir": null
+        }
+      },
+      "gaimplan-git": {
+        "capabilities": {
+          "prompts": false,
+          "resources": false,
+          "sampling": false,
+          "tools": true
+        },
+        "enabled": false,
+        "id": "gaimplan-git",
+        "name": "Git Version Control",
+        "permissions": {
+          "delete": false,
+          "external_access": true,
+          "read": true,
+          "write": true
+        },
+        "transport": {
+          "args": [
+            "./mcp-servers/git-server/index.js"
+          ],
+          "command": "node",
+          "env": {
+            "VAULT_PATH": "/Users/REPLACE_USERNAME/code/aura-dev/test-vault"
+          },
+          "type": "stdio",
+          "working_dir": null
+        }
+      },
+      "gaimplan-neo4j": {
+        "capabilities": {
+          "prompts": false,
+          "resources": false,
+          "sampling": false,
+          "tools": true
+        },
+        "enabled": false,
+        "id": "gaimplan-neo4j",
+        "name": "Neo4j Knowledge Graph",
+        "permissions": {
+          "delete": false,
+          "external_access": false,
+          "read": true,
+          "write": false
+        },
+        "transport": {
+          "args": [
+            "./mcp-servers/neo4j/index.js"
+          ],
+          "command": "node",
+          "env": {
+            "NEO4J_PASSWORD": "REPLACE",
+            "NEO4J_URI": "bolt://localhost:7687",
+            "NEO4J_USER": "neo4j",
+            "VAULT_ID": "default"
+          },
+          "type": "stdio",
+          "working_dir": null
+        }
+      },
+      "gaimplan-qdrant": {
+        "capabilities": {
+          "prompts": false,
+          "resources": false,
+          "sampling": false,
+          "tools": true
+        },
+        "enabled": false,
+        "id": "gaimplan-qdrant",
+        "name": "Qdrant Semantic Memory",
+        "permissions": {
+          "delete": false,
+          "external_access": false,
+          "read": true,
+          "write": true
+        },
+        "transport": {
+          "args": [
+            "./mcp-servers/qdrant-server/dist/index.js"
+          ],
+          "command": "node",
+          "env": {
+            "QDRANT_URL": "http://localhost:6333",
+            "TRANSFORMERS_CACHE": "./models",
+            "VAULT_ID": "default",
+            "VAULT_NAME": "default-vault"
+          },
+          "type": "stdio",
+          "working_dir": null
+        }
+      },
+      "gaimplan-search": {
+        "capabilities": {
+          "prompts": false,
+          "resources": false,
+          "sampling": false,
+          "tools": true
+        },
+        "enabled": false,
+        "id": "gaimplan-search",
+        "name": "Search & Analysis",
+        "permissions": {
+          "delete": false,
+          "external_access": false,
+          "read": true,
+          "write": false
+        },
+        "transport": {
+          "args": [
+            "./mcp-servers/search-server/index.js"
+          ],
+          "command": "node",
+          "env": {
+            "VAULT_PATH": "/Users/REPLACE_USERNAME/code/aura-dev/test-vault"
+          },
+          "type": "stdio",
+          "working_dir": null
+        }
       }
     }
-  ]
+  }
 }
 ```
 
