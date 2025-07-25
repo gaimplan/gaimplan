@@ -37,152 +37,6 @@ Here's an example `mcp_settings.json` file with all bundled MCP servers:
   "settings": {
     "enabled": true,
     "servers": {
-      "aura-filesystem": {
-        "capabilities": {
-          "prompts": false,
-          "resources": true,
-          "sampling": false,
-          "tools": true
-        },
-        "enabled": true,
-        "id": "aura-filesystem",
-        "name": "Filesystem Tools",
-        "permissions": {
-          "delete": true,
-          "external_access": false,
-          "read": true,
-          "write": true
-        },
-        "transport": {
-          "args": [
-            "./mcp-servers/filesystem-server/index.js"
-          ],
-          "command": "node",
-          "env": {
-            "VAULT_PATH": "/Users/REPLACE_USERNAME/code/aura-dev/test-vault"
-          },
-          "type": "stdio",
-          "working_dir": null
-        }
-      },
-      "aura-git": {
-        "capabilities": {
-          "prompts": false,
-          "resources": false,
-          "sampling": false,
-          "tools": true
-        },
-        "enabled": false,
-        "id": "aura-git",
-        "name": "Git Version Control",
-        "permissions": {
-          "delete": false,
-          "external_access": true,
-          "read": true,
-          "write": true
-        },
-        "transport": {
-          "args": [
-            "./mcp-servers/git-server/index.js"
-          ],
-          "command": "node",
-          "env": {
-            "VAULT_PATH": "/Users/REPLACE_USERNAME/code/aura-dev/test-vault"
-          },
-          "type": "stdio",
-          "working_dir": null
-        }
-      },
-      "aura-neo4j": {
-        "capabilities": {
-          "prompts": false,
-          "resources": false,
-          "sampling": false,
-          "tools": true
-        },
-        "enabled": true,
-        "id": "aura-neo4j",
-        "name": "Neo4j Knowledge Graph",
-        "permissions": {
-          "delete": false,
-          "external_access": false,
-          "read": true,
-          "write": false
-        },
-        "transport": {
-          "args": [
-            "./mcp-servers/neo4j/index.js"
-          ],
-          "command": "node",
-          "env": {
-            "NEO4J_PASSWORD": "Temp",
-            "NEO4J_URI": "bolt://localhost:7687",
-            "NEO4J_USER": "neo4j",
-            "VAULT_ID": "${VAULT_ID}"
-          },
-          "type": "stdio",
-          "working_dir": null
-        }
-      },
-      "aura-qdrant": {
-        "capabilities": {
-          "prompts": false,
-          "resources": false,
-          "sampling": false,
-          "tools": true
-        },
-        "enabled": true,
-        "id": "aura-qdrant",
-        "name": "Qdrant Semantic Memory",
-        "permissions": {
-          "delete": false,
-          "external_access": false,
-          "read": true,
-          "write": true
-        },
-        "transport": {
-          "args": [
-            "./mcp-servers/qdrant-server/dist/index.js"
-          ],
-          "command": "node",
-          "env": {
-            "QDRANT_URL": "http://localhost:6333",
-            "TRANSFORMERS_CACHE": "./models",
-            "VAULT_ID": "default",
-            "VAULT_NAME": "default"
-          },
-          "type": "stdio",
-          "working_dir": null
-        }
-      },
-      "aura-search": {
-        "capabilities": {
-          "prompts": false,
-          "resources": false,
-          "sampling": false,
-          "tools": true
-        },
-        "enabled": true,
-        "id": "aura-search",
-        "name": "Search & Analysis",
-        "permissions": {
-          "delete": false,
-          "external_access": false,
-          "read": true,
-          "write": false
-        },
-        "transport": {
-          "args": [
-            "./mcp-servers/search-server/index.js"
-          ],
-          "command": "node",
-          "env": {
-            "VAULT_PATH": "/Users/REPLACE_USERNAME/code/aura-dev/test-vault"
-          },
-          "type": "stdio",
-          "working_dir": null
-        }
-      },
       "gaimplan-filesystem": {
         "capabilities": {
           "prompts": false,
@@ -205,7 +59,7 @@ Here's an example `mcp_settings.json` file with all bundled MCP servers:
           ],
           "command": "node",
           "env": {
-            "VAULT_PATH": "/Users/REPLACE_USERNAME/code/aura-dev/test-vault"
+            "VAULT_PATH": "/Users/REPLACE_USERNAME/code/gaimplain-dev/test-vault"
           },
           "type": "stdio",
           "working_dir": null
@@ -233,7 +87,7 @@ Here's an example `mcp_settings.json` file with all bundled MCP servers:
           ],
           "command": "node",
           "env": {
-            "VAULT_PATH": "/Users/REPLACE_USERNAME/code/aura-dev/test-vault"
+            "VAULT_PATH": "/Users/REPLACE_USERNAME/code/gaimplain-dev/test-vault"
           },
           "type": "stdio",
           "working_dir": null
@@ -323,7 +177,7 @@ Here's an example `mcp_settings.json` file with all bundled MCP servers:
           ],
           "command": "node",
           "env": {
-            "VAULT_PATH": "/Users/REPLACE_USERNAME/code/aura-dev/test-vault"
+            "VAULT_PATH": "/Users/REPLACE_USERNAME/code/gaimplain-dev/test-vault"
           },
           "type": "stdio",
           "working_dir": null
