@@ -84,17 +84,6 @@ This isn't "ChatGPT in a notes app." It's the missing infrastructure for human-A
 
 ## 🚀 Getting Started (Beta)
 
-### For Users (No Setup Required!)
-
-1.  Download the latest DMG installer: [Gaimplan_0.1.0_aarch64.dmg](https://github.com/gaimplan/gaimplan/raw/refs/heads/main/beta/gaimplan_0.1.0_aarch64.dmg)
-2.  Double-click the DMG file to mount it
-3.  Drag Gaimplan.app to your Applications folder
-4.  Launch Gaimplan from Applications or Spotlight
-
-**That's it!** Start building your context engine immediately.
-
-## 🛠️ For Developers
-
 Gaimplan is open source and we welcome contributions!
 
 ### Prerequisites
