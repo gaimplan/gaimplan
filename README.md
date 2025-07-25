@@ -10,6 +10,9 @@ This isn't "ChatGPT in a notes app." It's the missing infrastructure for human-A
 
 ![Welcome to Gaimplan](docs/gaimplan-welcome-example.jpg)
 
+![Notes Example](docs/gaimplan-quickstart-example.jpg)
+
+![Highlights Example](docs/gaimplan-highlights-example.jpg)
 ---
 
 ## ⚡ What Makes This Different
