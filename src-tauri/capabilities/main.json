@@ -1,0 +1,24 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main",
+  "description": "Main capability for gaimplan knowledge management app",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "dialog:default",
+    "dialog:allow-open",
+    "dialog:allow-save",
+    "dialog:allow-message",
+    "dialog:allow-ask", 
+    "dialog:allow-confirm",
+    "fs:default",
+    "fs:allow-read-dir",
+    "fs:allow-read-file",
+    "fs:allow-write-file",
+    "fs:allow-create",
+    "fs:allow-remove",
+    "fs:allow-exists",
+    "shell:default",
+    "shell:allow-open"
+  ]
+} 

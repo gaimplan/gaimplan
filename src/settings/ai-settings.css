@@ -1,0 +1,343 @@
+/* AI Settings Panel Styles */
+.ai-settings-panel {
+    padding: 20px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    max-width: 600px;
+    margin: 0 auto;
+    height: 100%;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.ai-settings-panel h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: #1a1a1a;
+}
+
+/* Quick Setup Section */
+.quick-setup {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.quick-setup p {
+    margin: 0 0 12px 0;
+    font-weight: 500;
+    color: #666;
+}
+
+.quick-setup-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.quick-setup-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.quick-setup-btn:hover {
+    background: #0066cc;
+    color: white;
+    border-color: #0066cc;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.quick-setup-btn.selected {
+    background: #e6f2ff;
+    border-color: #0066cc;
+    color: #0066cc;
+}
+
+.quick-setup-btn.active {
+    border-color: #28a745;
+    border-width: 2px;
+}
+
+.quick-setup-btn.active.selected {
+    background: #0066cc;
+    color: white;
+    border-color: #0066cc;
+}
+
+.active-badge {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    background: #28a745;
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    margin-left: 4px;
+}
+
+.quick-setup-info {
+    margin-top: 12px;
+    margin-bottom: 0;
+    font-size: 13px;
+}
+
+.quick-setup-info .warning {
+    color: #ff6b35;
+    font-weight: 500;
+}
+
+.quick-setup-info .info {
+    color: #666;
+}
+
+.provider-icon {
+    font-size: 18px;
+}
+
+/* Form Styles */
+.settings-form {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+    background: white;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #0066cc;
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+.form-input[type="textarea"],
+textarea.form-input {
+    min-height: 100px;
+    resize: vertical;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.5;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 4px;
+    color: #666;
+    font-size: 12px;
+}
+
+/* API Key Input */
+.api-key-input {
+    display: flex;
+    gap: 8px;
+}
+
+.api-key-input input {
+    flex: 1;
+}
+
+.toggle-visibility-btn {
+    padding: 8px 12px;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+}
+
+.toggle-visibility-btn:hover {
+    background: #f5f5f5;
+}
+
+/* Advanced Settings */
+.advanced-section {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.advanced-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-weight: 500;
+    color: #666;
+    transition: color 0.2s;
+}
+
+.advanced-toggle:hover {
+    color: #0066cc;
+}
+
+.advanced-settings {
+    margin-top: 16px;
+    padding: 16px;
+    background: #f9f9f9;
+    border-radius: 6px;
+}
+
+.form-slider {
+    width: 100%;
+    margin-top: 8px;
+}
+
+/* Action Buttons */
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.test-btn, .save-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.test-btn {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.test-btn:hover:not(:disabled) {
+    background: #e0e0e0;
+}
+
+.test-btn.testing {
+    background: #e0e0e0;
+    color: #666;
+    cursor: not-allowed;
+}
+
+.save-btn {
+    background: #0066cc;
+    color: white;
+}
+
+.save-btn:hover {
+    background: #0052a3;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Test Status */
+.test-status {
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 6px;
+    border: 1px solid;
+}
+
+.test-status.success {
+    background: #f0fdf4;
+    border-color: #86efac;
+    color: #166534;
+}
+
+.test-status.error {
+    background: #fef2f2;
+    border-color: #fca5a5;
+    color: #991b1b;
+}
+
+.test-result {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
+.status-icon {
+    font-size: 18px;
+}
+
+.test-detail {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 26px;
+    margin-bottom: 4px;
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.detail-icon {
+    font-size: 14px;
+}
+
+/* Notifications */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 6px;
+    background: #333;
+    color: white;
+    font-size: 14px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s;
+    z-index: 10000;
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.notification-success {
+    background: #10b981;
+}
+
+.notification-error {
+    background: #ef4444;
+}
+
+.notification-info {
+    background: #3b82f6;
+}

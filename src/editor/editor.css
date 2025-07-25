@@ -1,0 +1,588 @@
+/* System font stack for native feel */
+:root {
+  --system-font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", 
+                       Roboto, Helvetica, Arial, sans-serif;
+  --mono-font-stack: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", 
+                     Consolas, "Courier New", monospace;
+  
+  /* Enhanced theme variables */
+  --editor-text-color: #2c3e50;
+  --editor-bg-color: #ffffff;
+  --editor-selection-bg: #b3d4fc;
+  --editor-caret-color: #5b47e0;
+  --editor-gutter-bg: #fafbfc;
+  --editor-gutter-color: #8a949e;
+  --editor-gutter-border: #e8eaed;
+  --editor-active-line-bg: #f8f9fa;
+  --editor-active-line-gutter-bg: #f0f1f3;
+  --editor-font-family: 'Inter', sans-serif;
+  --editor-font-size: 16px;
+  --editor-line-height: 1.65;
+  --editor-letter-spacing: -0.01em;
+  --editor-padding: 24px 32px;
+  
+  /* Inter font features for better typography */
+  --editor-font-features: 'liga' 1, 'calt' 1;
+  
+  /* Enhanced markdown variables */
+  --md-heading-color: #1e1e1e;
+  --md-heading-weight: 600;
+  --md-heading-border: #e8eaed;
+  --md-heading-muted: #6a737d;
+  --md-link-color: #5b47e0;
+  --md-link-hover-color: #4830d3;
+  --md-code-bg: #f6f8fa;
+  --md-code-color: #d73a49;
+  --md-code-block-bg: #f8f9fa;
+  --md-code-block-border: #e1e4e8;
+  --md-quote-border: #5b47e0;
+  --md-quote-bg: rgba(91, 71, 224, 0.03);
+  --md-quote-color: #586e75;
+  --md-hr-color: #e1e4e8;
+  --md-list-bullet: #586e75;
+  --md-task-checked: #6a737d;
+  --md-strong-color: inherit;
+  --md-emphasis-color: inherit;
+  --md-wikilink-bg: rgba(91, 71, 224, 0.08);
+  --md-wikilink-hover-bg: rgba(91, 71, 224, 0.15);
+  --md-blockref-color: #8b5cf6;
+  --md-blockref-bg: rgba(139, 92, 246, 0.1);
+  --md-tag-color: #059669;
+  --md-tag-bg: #d1fae5;
+  --md-tag-hover-bg: #a7f3d0;
+  --md-embedded-border: #e2e8f0;
+  --md-embedded-bg: #f8fafc;
+  --md-embedded-header-bg: #e2e8f0;
+  --md-embedded-header-color: #4a5568;
+  --md-embedded-content-color: #2d3748;
+}
+
+/* Smooth animations for native feel */
+* {
+  transition: background-color 0.15s ease,
+              color 0.15s ease,
+              border-color 0.15s ease;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Editor container */
+.editor-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--editor-bg-color, #ffffff) !important;
+}
+
+.editor {
+  flex: 1;
+  overflow: hidden;
+  background: var(--editor-bg-color, #ffffff) !important;
+}
+
+#editor-container {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  background: var(--editor-bg-color, #ffffff) !important;
+}
+
+/* CodeMirror base styling with typography */
+.cm-editor {
+  height: 100%;
+  font-family: var(--editor-font-family);
+  font-size: var(--editor-font-size);
+  line-height: var(--editor-line-height);
+  color: var(--editor-text-color);
+}
+
+.cm-content {
+  padding: 12px 16px;
+  min-height: 100%;
+  letter-spacing: var(--editor-letter-spacing);
+  font-feature-settings: var(--editor-font-features);
+}
+
+/* Enable Inter variable font support when available */
+@supports (font-variation-settings: normal) {
+  :root {
+    --editor-font-family: 'Inter', sans-serif;
+  }
+}
+
+.cm-focused {
+  outline: none;
+}
+
+/* Enhanced typography for better readability */
+.cm-line {
+  padding: 2px 0;
+  font-size: var(--editor-font-size);
+  line-height: var(--editor-line-height);
+}
+
+/* Native scrollbar styling */
+.cm-scroller::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.cm-scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cm-scroller::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.cm-scroller::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Dark theme scrollbar */
+.dark .cm-scroller::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.dark .cm-scroller::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Platform-specific adjustments */
+@media (platform: macos) {
+  .cm-content {
+    font-smoothing: antialiased;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@media (platform: windows) {
+  .cm-content {
+    font-smoothing: auto;
+    -webkit-font-smoothing: auto;
+  }
+}
+
+/* Remove padding from lines with widgets to prevent "double spacing" */
+.cm-line:has(.cm-horizontal-rule) {
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  line-height: 1 !important;
+  min-height: 0 !important;
+  height: auto !important;
+}
+
+/* Remove all possible underlines from headings */
+.cm-editor h1,
+.cm-editor h2,
+.cm-editor h3,
+.cm-editor h4,
+.cm-editor h5,
+.cm-editor h6,
+.cm-content h1,
+.cm-content h2,
+.cm-content h3,
+.cm-content h4,
+.cm-content h5,
+.cm-content h6,
+.cm-line h1,
+.cm-line h2,
+.cm-line h3,
+.cm-line h4,
+.cm-line h5,
+.cm-line h6 {
+  text-decoration: none !important;
+  border: none !important;
+  border-bottom: none !important;
+}
+
+/* Remove underlines from markdown tokens */
+.cm-editor .tok-heading,
+.cm-editor .tok-heading1,
+.cm-editor .tok-heading2,
+.cm-editor .tok-heading3,
+.cm-editor .tok-heading4,
+.cm-editor .tok-heading5,
+.cm-editor .tok-heading6 {
+  text-decoration: none !important;
+  border: none !important;
+  border-bottom: none !important;
+}
+
+/* Remove underlines from any element with heading classes */
+.cm-editor [class*="heading"],
+.cm-editor [class*="header"] {
+  text-decoration: none !important;
+  border: none !important;
+  border-bottom: none !important;
+}
+
+/* Override CodeMirror's built-in heading styles */
+.cm-editor .cm-heading1,
+.cm-editor .cm-heading2,
+.cm-editor .cm-heading3,
+.cm-editor .cm-heading4,
+.cm-editor .cm-heading5,
+.cm-editor .cm-heading6,
+.cm-content .cm-heading1,
+.cm-content .cm-heading2,
+.cm-content .cm-heading3,
+.cm-content .cm-heading4,
+.cm-content .cm-heading5,
+.cm-content .cm-heading6 {
+  text-decoration: none !important;
+  border: none !important;
+  border-bottom: none !important;
+}
+
+/* Override Lezer/markdown syntax highlighting */
+.cm-editor .ͼ1,
+.cm-editor .ͼ2,
+.cm-editor .ͼ3,
+.cm-editor .ͼ4,
+.cm-editor .ͼ5,
+.cm-editor .ͼ6,
+.cm-content .ͼ1,
+.cm-content .ͼ2,
+.cm-content .ͼ3,
+.cm-content .ͼ4,
+.cm-content .ͼ5,
+.cm-content .ͼ6 {
+  text-decoration: none !important;
+  border: none !important;
+  border-bottom: none !important;
+}
+
+/* Nuclear option - remove underlines from EVERYTHING in the editor */
+/* BUT preserve selection and essential backgrounds */
+.cm-editor *:not(.cm-selectionBackground),
+.cm-content *:not(.cm-selectionBackground) {
+  text-decoration: none !important;
+  border-bottom: none !important;
+}
+
+/* Removed old green selection styles - now using subtle blue */
+
+/* Then re-add underlines only where we want them (links and underline class) */
+.cm-editor .cm-link,
+.cm-editor .tok-link,
+.cm-editor .cm-wikilink,
+.cm-content .cm-link,
+.cm-content .tok-link,
+.cm-content .cm-wikilink {
+  text-decoration: underline !important;
+}
+
+/* Ensure underline inline formatting works */
+.cm-editor .cm-underline-inline,
+.cm-content .cm-underline-inline,
+.cm-line .cm-underline-inline,
+.cm-underline-inline,
+.cm-editor .cm-underline-formatted,
+.cm-content .cm-underline-formatted,
+.cm-line .cm-underline-formatted,
+.cm-underline-formatted {
+  text-decoration: underline !important;
+  text-decoration-line: underline !important;
+  text-decoration-style: solid !important;
+  text-decoration-color: currentColor !important;
+  text-underline-offset: 2px !important;
+  font-style: normal !important;
+  display: inline !important;
+}
+
+/* Override any italic styling that might be applied to underscores */
+.cm-line:has(.cm-underline-inline) .tok-emphasis,
+.cm-line:has(.cm-underline-inline) .cm-emphasis,
+.cm-line:has(.cm-underline-formatted) .tok-emphasis,
+.cm-line:has(.cm-underline-formatted) .cm-emphasis {
+  font-style: normal !important;
+}
+
+/* Override CodeMirror's default emphasis for underscore syntax */
+.cm-editor .tok-emphasis:has(+ .cm-underline-formatted),
+.cm-editor .tok-emphasis:has(.cm-underline-formatted),
+.cm-content .tok-emphasis:has(+ .cm-underline-formatted),
+.cm-content .tok-emphasis:has(.cm-underline-formatted) {
+  font-style: normal !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+}
+
+/* SUBTLE BLUE SELECTION - FULL WORD COVERAGE */
+.cm-selectionBackground {
+  background-color: #cce0ff !important;
+  color: #000000 !important;
+  opacity: 1 !important;
+  z-index: 1000 !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Selection styling for all states - cleaner approach */
+.cm-editor .cm-selectionBackground,
+.cm-content .cm-selectionBackground,
+.cm-line .cm-selectionBackground {
+  background-color: #cce0ff !important;
+  color: #000000 !important;
+  opacity: 1 !important;
+  z-index: 1000 !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ensure selection is visible even when editor is not focused */
+.cm-editor:not(.cm-focused) .cm-selectionBackground {
+  background-color: #cce0ff !important;
+  color: #000000 !important;
+  opacity: 1 !important;
+  z-index: 1000 !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Browser native selection fallback */
+.cm-content ::selection,
+.cm-editor ::selection {
+  background-color: #cce0ff !important;
+  color: #000000 !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ensure no borders or outlines on any selected text */
+.cm-editor *::selection,
+.cm-content *::selection,
+.cm-line *::selection {
+  background-color: #cce0ff !important;
+  color: #000000 !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* HIGH SPECIFICITY FOR FULL WORD SELECTION */
+.cm-editor.cm-editor.cm-editor .cm-selectionBackground,
+.cm-content.cm-content.cm-content .cm-selectionBackground,
+.cm-line.cm-line.cm-line .cm-selectionBackground,
+html body .cm-editor .cm-selectionBackground,
+html body .cm-content .cm-selectionBackground {
+  background-color: #cce0ff !important;
+  background: #cce0ff !important;
+  color: #000000 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: 999999 !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.cm-cursor {
+  border-left-width: 2px;
+}
+
+.cm-activeLine {
+  background-color: transparent !important;
+}
+
+/* Ensure active line background doesn't cover selections */
+.cm-activeLine .cm-selectionBackground {
+  background-color: #cce0ff !important;
+  background: #cce0ff !important;
+  color: #000000 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: 999999 !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.cm-gutters {
+  background-color: var(--editor-gutter-bg) !important;
+  border-right: 1px solid var(--editor-gutter-border) !important;
+}
+
+.cm-activeLineGutter {
+  background-color: transparent !important;
+}
+
+.cm-lineNumbers .cm-gutterElement {
+  color: var(--editor-gutter-color) !important;
+  padding: 0 12px 0 16px !important;
+  font-size: 14px !important;
+  line-height: var(--editor-line-height) !important;
+}
+
+/* Focus styling */
+.cm-editor.cm-focused {
+  outline: none !important;
+}
+
+/* Print styling */
+@media print {
+  .cm-gutters {
+    display: none;
+  }
+  
+  .cm-content {
+    background: white;
+    color: black;
+  }
+  
+  .cm-editor {
+    font-size: 12pt;
+    line-height: 1.4;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --editor-text-color: #000000;
+    --editor-bg-color: #ffffff;
+    --editor-selection-bg: #0078d4;
+    --editor-caret-color: #000000;
+    --editor-gutter-border: #000000;
+    --md-link-color: #0000ee;
+    --md-code-bg: #f0f0f0;
+    --md-code-color: #000000;
+  }
+}
+
+/* Enhanced dark theme - (only when explicitly set) */
+.dark-theme {
+  --editor-text-color: #dcddde;
+  --editor-bg-color: #202020;
+  --editor-selection-bg: #404040;
+  --editor-caret-color: #7c3aed;
+  --editor-gutter-bg: #1a1a1a;
+  --editor-gutter-color: #666666;
+  --editor-gutter-border: #2a2a2a;
+  --editor-active-line-bg: #2a2a2a;
+  --editor-active-line-gutter-bg: #2a2a2a;
+  --md-heading-color: #ffffff;
+  --md-heading-border: #404040;
+  --md-heading-muted: #888888;
+  --md-link-color: #7c3aed;
+  --md-link-hover-color: #8b5cf6;
+  --md-code-bg: #2a2a2a;
+  --md-code-color: #ff6b6b;
+  --md-code-block-bg: #1a1a1a;
+  --md-code-block-border: #404040;
+  --md-quote-border: #7c3aed;
+  --md-quote-bg: rgba(124, 58, 237, 0.05);
+  --md-quote-color: #b3b3b3;
+  --md-hr-color: #404040;
+  --md-list-bullet: #888888;
+  --md-task-checked: #666666;
+}
+
+/* Focus ring for accessibility */
+.cm-editor.cm-focused {
+  outline: 2px solid var(--editor-caret-color);
+  outline-offset: -2px;
+}
+
+/* Screen reader support */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ZERO extra spacing, natural text flow */
+
+/* Force Inter font loading test */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Inter font headings with proper weights and sizing */
+.cm-editor h1, .cm-content h1 {
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 2rem !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.02em !important;
+  font-display: swap !important;
+}
+
+.cm-editor h2, .cm-content h2 {
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 1.5rem !important;
+  line-height: 1.3 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.cm-editor h3, .cm-content h3 {
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 1.25rem !important;
+  line-height: 1.4 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.cm-editor h4, .cm-content h4,
+.cm-editor h5, .cm-content h5,
+.cm-editor h6, .cm-content h6 {
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 1.125rem !important;
+  line-height: 1.4 !important;
+  letter-spacing: -0.005em !important;
+}
+
+/* Apply Inter to all editor content */
+.cm-editor, .cm-content {
+  font-family: 'Inter', sans-serif !important;
+}
+
+/* Fix underscore formatting - when it's meant to be underline, not italic */
+.cm-content .cm-line .tok-emphasis {
+  /* This will be overridden when underline formatting is applied */
+}
+
+/* Override CodeMirror's default italic for underscore when our formatting is applied */
+.cm-line .cm-underline-formatted {
+  font-style: normal !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+}
+
+/* Ensure the content inside underline formatting is not italic */
+.cm-underline-formatted * {
+  font-style: normal !important;
+}
+
+/* Force override any emphasis/italic within underline formatted text */
+.cm-line .cm-underline-formatted,
+.cm-line .cm-underline-formatted .tok-emphasis,
+.cm-line .cm-underline-formatted .cm-emphasis,
+.cm-line .tok-emphasis.cm-underline-formatted,
+.cm-line .cm-emphasis.cm-underline-formatted {
+  font-style: normal !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+}

@@ -1,0 +1,105 @@
+.graph-sync-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  margin-right: auto; /* Push word count to the right */
+}
+
+/* Floating version for standalone use */
+.graph-sync-status.floating {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 16px;
+  min-width: 200px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.sync-status-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sync-status-label {
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.sync-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  transition: transform 0.2s;
+  line-height: 1;
+}
+
+.sync-toggle:hover {
+  transform: scale(1.1);
+}
+
+.sync-toggle.enabled {
+  filter: brightness(1.2);
+}
+
+.sync-progress {
+  display: none; /* Hide in status bar for space */
+}
+
+.sync-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.sync-file {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.sync-error {
+  display: none; /* Hide in status bar for space */
+}
+
+.error-icon {
+  flex-shrink: 0;
+}
+
+.error-message {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sync-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.pending-count,
+.error-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.error-count {
+  color: #ff6b6b;
+}

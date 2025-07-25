@@ -1,0 +1,14 @@
+{
+  "name": "gaimplan-git-server",
+  "version": "1.0.0",
+  "description": "Git MCP server for gaimplan - provides version control operations",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "simple-git": "^3.20.0"
+  }
+}

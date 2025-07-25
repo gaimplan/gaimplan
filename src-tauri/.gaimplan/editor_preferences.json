@@ -1,0 +1,11 @@
+{
+  "theme": "default",
+  "font_size": 14,
+  "font_family": "'SF Mono', Monaco, 'Cascadia Code', monospace",
+  "line_height": 1.6,
+  "line_wrapping": true,
+  "vim_mode": false,
+  "autosave_interval": 30,
+  "show_line_numbers": true,
+  "highlight_active_line": true
+}

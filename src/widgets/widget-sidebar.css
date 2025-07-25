@@ -1,0 +1,681 @@
+/* Widget Sidebar Styles */
+
+:root {
+    --widget-sidebar-width: 300px;
+    --widget-tab-height: 36px;
+    --widget-border-color: rgba(0, 0, 0, 0.05);
+    --widget-bg: var(--bg-secondary, #f5f5f5);
+    --widget-tab-active: var(--accent-color, #007AFF);
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --text-primary: #000000;
+    --text-secondary: #666666;
+    --header-height: 40px; /* Editor header height */
+    --tab-bar-height: 36px; /* Tab bar height */
+}
+
+/* Container styles */
+.widget-sidebar {
+    width: 0;
+    background: var(--widget-bg);
+    border-left: 1px solid var(--widget-border-color);
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+    height: 100%;
+}
+
+.widget-sidebar.visible {
+    width: 300px;
+    min-width: 250px;
+    max-width: 600px;
+}
+
+/* Tab bar */
+.widget-tabs {
+    display: flex;
+    height: var(--widget-tab-height);
+    border-bottom: 1px solid var(--widget-border-color);
+    background: var(--bg-primary);
+    flex-shrink: 0;
+    gap: 4px;
+    padding: 0 8px;
+}
+
+.widget-tab {
+    padding: 0 20px;
+    height: var(--widget-tab-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.widget-tab:hover {
+    color: var(--text-primary);
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.widget-tab.active {
+    color: var(--text-primary);
+    border-bottom-color: var(--widget-tab-active);
+    font-weight: 500;
+}
+
+/* Content area */
+.widget-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px;
+}
+
+.widget-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* Resize handle */
+.widget-resize-handle {
+    position: absolute;
+    left: -3px;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    cursor: ew-resize;
+    background: transparent;
+    transition: background 0.2s ease;
+}
+
+.widget-resize-handle:hover,
+.widget-sidebar.resizing .widget-resize-handle {
+    background: rgba(0, 122, 255, 0.1);
+}
+
+/* No additional layout CSS needed - the widget sidebar will work like the chat panel */
+
+/* Ensure proper visual layering */
+.widget-sidebar {
+    z-index: 100;
+}
+
+.right-sidebar {
+    z-index: 99;
+}
+
+/* Placeholder styles */
+.widget-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-secondary);
+    font-style: italic;
+    font-size: 14px;
+}
+
+/* Widget-specific styles */
+
+/* ======== Table of Contents Widget ======== */
+.toc-widget {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.toc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--widget-border-color);
+    background: var(--bg-primary);
+}
+
+.toc-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.toc-count {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.toc-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+}
+
+.toc-empty {
+    padding: 24px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+/* TOC tree structure */
+.toc-level {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.toc-level-0 {
+    padding: 0 12px;
+}
+
+.toc-level-1 {
+    padding-left: 20px;
+}
+
+.toc-level-2 {
+    padding-left: 20px;
+}
+
+.toc-level-3 {
+    padding-left: 20px;
+}
+
+.toc-item {
+    margin: 0;
+}
+
+.toc-link {
+    display: block;
+    padding: 6px 8px;
+    text-decoration: none;
+    color: var(--text-primary);
+    font-size: 13px;
+    line-height: 1.4;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.toc-link:hover {
+    background: var(--bg-secondary);
+    color: var(--widget-tab-active);
+}
+
+.toc-link.active {
+    background: var(--widget-tab-active);
+    color: white;
+}
+
+/* Heading level styles */
+.toc-link-h1 {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.toc-link-h2 {
+    font-weight: 500;
+}
+
+.toc-link-h3 {
+    font-size: 12px;
+}
+
+.toc-link-h4,
+.toc-link-h5,
+.toc-link-h6 {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+/* Dark theme support for TOC */
+body.dark-theme .toc-header {
+    background: var(--bg-primary);
+    border-bottom-color: var(--border-color);
+}
+
+body.dark-theme .toc-link {
+    color: var(--text-primary);
+}
+
+body.dark-theme .toc-link:hover {
+    background: var(--bg-secondary);
+}
+
+body.dark-theme .toc-link.active {
+    background: var(--widget-tab-active);
+    color: white;
+}
+
+/* ======== Calendar Widget ======== */
+.calendar-widget {
+    padding: 16px;
+    height: 100%;
+    overflow: auto;
+}
+
+.calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0 16px 0;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--widget-border-color);
+}
+
+.calendar-month-year {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.calendar-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.calendar-nav {
+    display: flex;
+    gap: 4px;
+}
+
+.calendar-nav-btn {
+    background: none;
+    border: 1px solid var(--widget-border-color);
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-secondary);
+    transition: all 0.15s ease;
+    min-width: 32px;
+}
+
+.calendar-nav-btn:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+}
+
+.calendar-nav-btn:active {
+    transform: scale(0.95);
+}
+
+.calendar-today-btn {
+    min-width: auto;
+    padding: 4px 12px;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 4px;
+}
+
+.calendar-weekday {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding: 8px 0;
+    opacity: 0.7;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.15s ease;
+    border: 1px solid transparent;
+}
+
+.calendar-day:hover:not(.calendar-day-empty) {
+    background: var(--bg-secondary);
+    border-color: var(--widget-border-color);
+}
+
+.calendar-day-number {
+    font-size: 13px;
+    font-weight: 400;
+}
+
+.calendar-day-today {
+    background: var(--widget-tab-active);
+    color: white;
+    font-weight: 600;
+}
+
+.calendar-day-today:hover {
+    background: var(--widget-tab-active);
+    opacity: 0.9;
+}
+
+.calendar-day-has-note {
+    font-weight: 600;
+}
+
+.calendar-day-has-note::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--widget-tab-active);
+}
+
+.calendar-day-today.calendar-day-has-note::after {
+    background: white;
+}
+
+.calendar-day-empty {
+    cursor: default;
+    opacity: 0;
+}
+
+/* Calendar preview tooltip */
+.calendar-preview {
+    position: fixed;
+    background: var(--bg-primary);
+    border: 1px solid var(--widget-border-color);
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 12px;
+    color: var(--text-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    pointer-events: none;
+    width: 250px;
+    max-width: 250px;
+}
+
+.calendar-preview-title {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--widget-border-color);
+    color: var(--widget-tab-active);
+}
+
+.calendar-preview-content {
+    line-height: 1.4;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Calendar notification */
+.calendar-notification {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--widget-tab-active);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 12px;
+    animation: slideUp 0.3s ease;
+    z-index: 100;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* Dark theme adjustments for calendar */
+body.dark-theme .calendar-nav-btn:hover {
+    background: var(--bg-secondary);
+    border-color: var(--text-secondary);
+}
+
+body.dark-theme .calendar-day:hover:not(.calendar-day-empty) {
+    background: var(--bg-secondary);
+}
+
+body.dark-theme .calendar-preview {
+    background: var(--bg-secondary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Calendar Settings Panel */
+.calendar-settings-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-primary);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.calendar-settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid var(--widget-border-color);
+}
+
+.calendar-settings-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.calendar-settings-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+}
+
+.calendar-settings-close:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.calendar-settings-section {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+.calendar-settings-section h4 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.help-text {
+    color: var(--text-secondary);
+    font-size: 12px;
+    margin: 8px 0;
+}
+
+.template-variables {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 16px 0;
+    font-size: 12px;
+}
+
+.template-variables li {
+    padding: 4px 0;
+    color: var(--text-secondary);
+}
+
+.template-variables code {
+    background: var(--bg-secondary);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--widget-tab-active);
+}
+
+.calendar-template-editor {
+    width: 100%;
+    min-height: 200px;
+    padding: 12px;
+    border: 1px solid var(--widget-border-color);
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 13px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    resize: vertical;
+}
+
+.calendar-template-preview {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--widget-border-color);
+}
+
+.calendar-template-preview h4 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.preview-content {
+    background: var(--bg-secondary);
+    padding: 12px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    overflow-x: auto;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.calendar-settings-buttons {
+    padding: 16px;
+    border-top: 1px solid var(--widget-border-color);
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.calendar-settings-buttons button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-primary {
+    background: var(--widget-tab-active);
+    color: white;
+    border: none;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+}
+
+.btn-secondary {
+    background: none;
+    border: 1px solid var(--widget-border-color);
+    color: var(--text-secondary);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+/* Dark theme support for settings */
+body.dark-theme .calendar-settings-panel {
+    background: var(--bg-primary);
+}
+
+body.dark-theme .calendar-template-editor {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+body.dark-theme .preview-content {
+    background: var(--bg-secondary);
+}
+
+/* Dark theme adjustments */
+.theme-dark .widget-sidebar {
+    --widget-bg: var(--bg-secondary);
+    --widget-border-color: rgba(255, 255, 255, 0.1);
+}
+
+.theme-dark .widget-tab:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.theme-dark .calendar-nav button:hover {
+    background: var(--bg-secondary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .widget-sidebar {
+        --widget-sidebar-width: 250px;
+    }
+}
+
+@media (max-width: 900px) {
+    /* Stack sidebars on small screens */
+    .editor-container.both-sidebars-visible .widget-sidebar {
+        display: none;
+    }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "gaimplan-filesystem-server",
+  "version": "1.0.0",
+  "description": "Filesystem MCP server for gaimplan - provides file operations within the vault",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@gaimplan/mcp-neo4j",
+  "version": "1.0.0",
+  "description": "MCP server for gaimplan's Neo4j knowledge graph",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "neo4j-driver": "^5.0.0",
+    "dotenv": "^16.0.0",
+    "@xenova/transformers": "^2.6.0"
+  }
+}

@@ -1,0 +1,351 @@
+/* PDF Viewer Styles - Scoped to prevent conflicts with editor styles */
+
+/* Main PDF container */
+.pdf-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background-color: #f5f5f5;
+  overflow: hidden;
+}
+
+/* PDF Toolbar - Matches editor header style */
+.pdf-toolbar {
+  /* Inherits from .editor-header */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: white;
+  min-height: 40px;
+}
+
+/* PDF toolbar sections - ensure horizontal layout */
+.pdf-toolbar .editor-header-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex-wrap: nowrap !important;
+  margin-right: 24px !important;
+}
+
+.pdf-toolbar-center {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: nowrap !important;
+}
+
+/* Ensure filename doesn't take up too much space */
+.pdf-toolbar-center .pdf-filename {
+  margin-right: 20px;
+}
+
+/* Page counter styling */
+.pdf-page-counter {
+  font-size: 12px;
+  color: #666;
+  margin: 0 2px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  white-space: nowrap;
+}
+
+/* Zoom controls group */
+.pdf-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Zoom level display */
+.pdf-zoom-level {
+  font-size: 12px;
+  color: #666;
+  margin: 0 2px;
+  min-width: 45px;
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* PDF filename in toolbar */
+.pdf-filename {
+  font-size: 13px;
+  color: #333;
+  font-weight: 500;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Highlight count display */
+.pdf-highlight-count {
+  font-size: 12px;
+  color: #666;
+  margin-left: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  white-space: nowrap;
+}
+
+/* Ensure editor separator shows in PDF toolbar */
+.pdf-toolbar .editor-header-separator {
+  width: 1px;
+  height: 20px;
+  background-color: rgba(0, 0, 0, 0.1);
+  margin: 0 8px;
+}
+
+/* PDF viewer scrollable area */
+.pdf-viewer {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: 20px;
+  background-color: #e5e5e5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Individual PDF page */
+.pdf-page {
+  position: relative;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  user-select: none; /* Prevent page selection, only allow text layer */
+}
+
+/* But allow selection within the page */
+.pdf-page .textLayer {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}
+
+/* PDF canvas */
+.pdf-page canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Text layer for selection - based on PDF.js official styles */
+.textLayer {
+  position: absolute;
+  text-align: initial;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  opacity: 1; /* Full opacity for proper selection */
+  line-height: 1;
+  -webkit-text-size-adjust: none;
+  -moz-text-size-adjust: none;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  z-index: 2;
+}
+
+/* Text layer spans - make them transparent but selectable */
+.textLayer span,
+.textLayer br {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+/* Fix for PDF.js text layer selection */
+.textLayer br {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+/* Smooth selection styling like Obsidian */
+.textLayer ::selection {
+  background: rgba(0, 123, 255, 0.3);
+  color: transparent;
+}
+
+.textLayer ::-moz-selection {
+  background: rgba(0, 123, 255, 0.3);
+  color: transparent;
+}
+
+/* Aggressive selection bridging to fill gaps between words */
+.textLayer span::selection {
+  background: rgba(0, 123, 255, 0.3);
+  color: transparent;
+  /* Extend selection to fill gaps between words */
+  padding-left: 3px;
+  padding-right: 3px;
+  margin-left: -3px;
+  margin-right: -3px;
+  /* Ensure selection extends vertically to connect lines */
+  padding-top: 2px;
+  padding-bottom: 2px;
+  margin-top: -2px;
+  margin-bottom: -2px;
+}
+
+.textLayer span::-moz-selection {
+  background: rgba(0, 123, 255, 0.3);
+  color: transparent;
+  padding-left: 3px;
+  padding-right: 3px;
+  margin-left: -3px;
+  margin-right: -3px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  margin-top: -2px;
+  margin-bottom: -2px;
+}
+
+/* Use pseudo-elements to fill selection gaps */
+.textLayer span::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  right: -5px;
+  top: -2px;
+  bottom: -2px;
+  background: transparent;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* When selected, show the extended background */
+.textLayer span:has(::selection)::before {
+  background: rgba(0, 123, 255, 0.15);
+}
+
+/* Ensure text layer doesn't block canvas but allows selection */
+.textLayer {
+  mix-blend-mode: multiply;
+  font-family: sans-serif;
+}
+
+/* Remove any debug outlines from PDF.js */
+.textLayer .endOfContent,
+.textLayer .markedContent {
+  display: none;
+}
+
+/* Clean up span styling to prevent multiple selection boxes */
+.textLayer span {
+  border: none !important;
+  background-color: transparent !important;
+  outline: none !important;
+}
+
+/* Hide any PDF.js generated borders or decorations */
+.textLayer .highlight,
+.textLayer .selected {
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+}
+
+/* Highlight overlays */
+.pdf-highlight {
+  position: absolute;
+  background-color: rgba(255, 255, 0, 0.4);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  border-radius: 1px;
+}
+
+/* Error message styling */
+.pdf-error {
+  padding: 40px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.pdf-error p {
+  margin: 0;
+}
+
+/* Loading state */
+.pdf-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #666;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Ensure PDF viewer has proper focus styling */
+.pdf-viewer:focus {
+  outline: none;
+}
+
+/* Hide PDF.js default UI elements if any appear */
+.annotationLayer {
+  display: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .pdf-viewer {
+    padding: 10px;
+  }
+  
+  .pdf-page {
+    margin-bottom: 10px;
+  }
+}
+
+/* Print styles */
+@media print {
+  .pdf-toolbar {
+    display: none;
+  }
+  
+  .pdf-viewer {
+    background: white;
+    padding: 0;
+  }
+  
+  .pdf-page {
+    box-shadow: none;
+    border: none;
+    margin: 0;
+    page-break-after: always;
+  }
+  
+  .pdf-highlight {
+    background-color: rgba(255, 255, 0, 0.3);
+  }
+}
+
+/* Smooth scrolling for page navigation */
+.pdf-viewer {
+  scroll-behavior: smooth;
+}
+
+/* Override any global pointer-events that might interfere */
+.pdf-page .textLayer * {
+  pointer-events: auto !important;
+}
+
+/* Ensure highlights don't interfere with text selection */
+.pdf-highlight {
+  pointer-events: none !important;
+  user-select: none !important;
+}

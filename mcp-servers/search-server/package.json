@@ -1,0 +1,13 @@
+{
+  "name": "gaimplan-search-server",
+  "version": "1.0.0",
+  "description": "Search MCP server for Gaimplan - provides content search within vault",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

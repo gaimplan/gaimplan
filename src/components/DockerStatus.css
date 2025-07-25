@@ -1,0 +1,95 @@
+.docker-status {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px;
+}
+
+.docker-status-error {
+  border-color: #ff4444;
+  background: rgba(255, 68, 68, 0.1);
+}
+
+.docker-status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.docker-status-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.docker-status-controls button {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.docker-status-controls button:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--accent-color);
+}
+
+.docker-status-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.docker-status-services {
+  display: flex;
+  gap: 16px;
+}
+
+.docker-service {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+
+.service-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.service-info {
+  flex: 1;
+}
+
+.service-name {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.service-status {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.service-link {
+  font-size: 12px;
+  color: var(--accent-color);
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.service-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}

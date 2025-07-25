@@ -1,0 +1,44 @@
+{
+  "identifier": "com.gaimplan.app",
+  "productName": "gaimplan",
+  "version": "0.1.0",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173"
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/icon.png"
+    ]
+  },
+  "app": {
+    "macOSPrivateApi": true,
+    "security": {
+      "csp": null,
+      "capabilities": ["main"]
+    },
+    "windows": [
+      {
+        "title": "",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600,
+        "label": "main",
+        "transparent": true
+      }
+    ]
+  },
+  "plugins": {
+    "fs": {
+      "requireLiteralLeadingDot": false
+    },
+    "shell": {
+      "open": true
+    }
+  }
+}
