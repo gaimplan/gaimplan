@@ -10,29 +10,6 @@ This isn't "ChatGPT in a notes app." It's the missing infrastructure for human-A
 
 ---
 
-## 🧠 How Gaimplan Builds Your Context Engine
-
-**Example 1: The Debugging Pattern**
-- You write: "Fixed auth bug - race condition in token refresh"
-- You highlight: The specific code pattern that caused it
-- Gaimplan synthesizes: Creates context linking this to 3 similar bugs you've solved
-- Next time you ask AI: "I'm seeing weird auth failures"
-- AI responds with: Your exact debugging pattern, the race condition history, and suggests checking the token refresh logic you've highlighted before
-
-**Example 2: The Research Synthesis**
-- Monday: You save papers on distributed systems, highlight key theorems
-- Tuesday: You note connections between consensus algorithms
-- Wednesday: You tag #byzantine-fault-tolerance across several notes
-- Thursday: You ask AI about system design
-- AI output: Incorporates YOUR specific research focus, references the exact theorems you found important, and builds on the connections you've been exploring
-
-**Example 3: The Product Evolution**
-- Week 1: Customer feedback notes with pain points highlighted
-- Week 2: Technical architecture decisions tagged #core-infrastructure  
-- Week 3: Competitor analysis with key differentiators marked
-- Ask AI: "How should we position our next feature?"
-- AI synthesizes: Your exact customer pain points, your architectural constraints, and competitive gaps—not generic product advice
-
 ## ⚡ What Makes This Different
 
 **ChatGPT/Claude:** Start from zero every conversation. You explain context again and again.
@@ -41,7 +18,7 @@ This isn't "ChatGPT in a notes app." It's the missing infrastructure for human-A
 **Notion AI:** Operates on one document at a time. Can't see connections.
 **Gaimplan:** Traverses your entire knowledge graph. Finds patterns across months of thinking.
 
-**Obsidian + AI Plugin:** You manually select what context to share. Static embeddings.
+**Obsidian + AI Plugin:** You manually select what context to share. Static embeddings
 **Gaimplan:** Progressive context synthesis. Your highlights and tags automatically expand AI's understanding.
 
 **Cursor/Copilot:** Sees your code, not your reasoning.
@@ -78,6 +55,29 @@ This isn't "ChatGPT in a notes app." It's the missing infrastructure for human-A
 *   **⚡ Living Knowledge Vault:** Local-first, secure, and blazing fast with Tauri + Rust
 *   **🎯 Multi-Model Support:** OpenAI, Gemini, Ollama, LM Studio—all with persistent context
 *   **📄 Universal Ingestion:** PDFs, images, code, markdown—everything becomes context
+
+## 🧠 How Gaimplan Builds Your Context Engine
+
+**Example 1: The Debugging Pattern**
+- You write: "Fixed auth bug - race condition in token refresh"
+- You highlight: The specific code pattern that caused it
+- Gaimplan synthesizes: Creates context linking this to 3 similar bugs you've solved
+- Next time you ask AI: "I'm seeing weird auth failures"
+- AI responds with: Your exact debugging pattern, the race condition history, and suggests checking the token refresh logic you've highlighted before
+
+**Example 2: The Research Synthesis**
+- Monday: You save papers on distributed systems, highlight key theorems
+- Tuesday: You note connections between consensus algorithms
+- Wednesday: You tag #byzantine-fault-tolerance across several notes
+- Thursday: You ask AI about system design
+- AI output: Incorporates YOUR specific research focus, references the exact theorems you found important, and builds on the connections you've been exploring
+
+**Example 3: The Product Evolution**
+- Week 1: Customer feedback notes with pain points highlighted
+- Week 2: Technical architecture decisions tagged #core-infrastructure  
+- Week 3: Competitor analysis with key differentiators marked
+- Ask AI: "How should we position our next feature?"
+- AI synthesizes: Your exact customer pain points, your architectural constraints, and competitive gaps—not generic product advice
 
 ## 🚀 Getting Started (Beta)
 
