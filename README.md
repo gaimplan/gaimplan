@@ -23,6 +23,20 @@ This isn't "ChatGPT in a notes app." It's the missing infrastructure for human-A
 *   **🎯 Multi-Model Support:** OpenAI, Gemini, Ollama, LM Studio—all with persistent context
 *   **📄 Universal Ingestion:** PDFs, images, code, markdown—everything becomes context
 
+## ⚡ What Makes This Different
+
+**ChatGPT/Claude:** Start from zero every conversation. You explain context again and again.
+- **Gaimplan:** Every conversation builds on your entire knowledge history. AI already knows your patterns.
+
+**Notion AI:** Operates on one document at a time. Can't see connections.
+- **Gaimplan:** Traverses your entire knowledge graph. Finds patterns across months of thinking.
+
+**Obsidian + AI Plugin:** You manually select what context to share. Static embeddings
+- **Gaimplan:** Progressive context synthesis. Your highlights and tags automatically expand AI's understanding.
+
+**Cursor/Copilot:** Sees your code, not your reasoning.
+- **Gaimplan:** Captures the WHY behind your decisions, making AI suggestions align with your architectural philosophy.
+
 ## 🧠 How Gaimplan Builds Your Context Engine
 
 **Example 1: The Debugging Pattern**
@@ -45,21 +59,6 @@ This isn't "ChatGPT in a notes app." It's the missing infrastructure for human-A
 - Week 3: Competitor analysis with key differentiators marked
 - Ask AI: "How should we position our next feature?"
 - AI synthesizes: Your exact customer pain points, your architectural constraints, and competitive gaps—not generic product advice
-
-## ⚡ What Makes This Different
-
-**ChatGPT/Claude:** Start from zero every conversation. You explain context again and again.
-- **Gaimplan:** Every conversation builds on your entire knowledge history. AI already knows your patterns.
-
-**Notion AI:** Operates on one document at a time. Can't see connections.
-- **Gaimplan:** Traverses your entire knowledge graph. Finds patterns across months of thinking.
-
-**Obsidian + AI Plugin:** You manually select what context to share. Static embeddings
-- **Gaimplan:** Progressive context synthesis. Your highlights and tags automatically expand AI's understanding.
-
-**Cursor/Copilot:** Sees your code, not your reasoning.
-- **Gaimplan:** Captures the WHY behind your decisions, making AI suggestions align with your architectural philosophy.
-
 
 ## 🚀 Getting Started (Beta)
 
