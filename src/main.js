@@ -17,7 +17,6 @@ import { WidgetSidebar } from './widgets/WidgetSidebar.js';
 import { perfMonitor } from './performance/PerformanceMonitor.js';
 import { perfTestSuite } from './performance/PerformanceTestSuite.js';
 import { globalSearch } from './search/GlobalSearch.js';
-import './test-mcp-settings.js';
 
 console.log('✅ Tauri v2 APIs and editor components imported successfully!');
 console.log('🔍 EnhancedChatPanel class:', EnhancedChatPanel);
@@ -1585,30 +1584,28 @@ function showWelcomeScreen() {
         <div class="welcome-header">
           <h1>Welcome to Gaimplan</h1>
           <img src="/gaimplan-logo-transparent.png" alt="gaimplan Logo" class="welcome-logo" />
-          <h2>Transform Your Knowledge Into Superhuman Intelligence</h2>
+          <p>Open or create a vault to start managing your knowledge.</p>
         </div>
         
         <div class="features-section">
+          <h3>Features</h3>
           <div class="feature-cards">
+            <div class="feature-card">
+              <div class="feature-icon">📁</div>
+              <h3>Local Files</h3>
+              <p>Your notes are stored as plain Markdown files on your computer.</p>
+            </div>
+            
             <div class="feature-card">
               <div class="feature-icon">🔒</div>
               <h3>Private</h3>
-              <h4>Secure by Design</h4>
-              <p>No Cloud. No Tracking. No BS. Every note stays local as plain Markdown. Total control, total privacy.</p>
+              <p>No Telemetry. No tracking. No ads.</p>
             </div>
             
             <div class="feature-card">
               <div class="feature-icon">⚡</div>
-              <h3>Blazing Fast</h3>
-              <h4>Native Performance</h4>
-              <p>Locally powered personal knowledge vault & context engine with instant search, zero lag. Built for flow state.</p>
-            </div>
-            
-            <div class="feature-card">
-              <div class="feature-icon">🧠</div>
-              <h3>Agent-Ready</h3>
-              <h4>Progressive Context</h4>
-              <p>Each note, highlight, and connection strengthens your AI context. Watch your intelligence amplify over time.</p>
+              <h3>Fast</h3>
+              <p>Native performance with a lightweight design.</p>
             </div>
           </div>
         </div>

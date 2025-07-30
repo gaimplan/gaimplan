@@ -171,29 +171,27 @@ export async function getBundledServers(vaultPath) {
   // Extract vault name from path (last component)
   const vaultName = vaultPath.split('/').pop() || vaultPath.split('\\').pop() || 'default';
   
-  // Load Neo4j connection info from backend (never store passwords in frontend!)
+  // Try to load Neo4j connection info from backend
   let neo4jConfig = {
     uri: 'bolt://localhost:7687',
     user: 'neo4j',
-    password: '' // Password must come from backend
+    password: 'GaimplanKnowledgeGraph2025'
   };
   
   try {
     // Get connection info from Rust backend
     const { invoke } = window.__TAURI__.core;
     const connInfo = await invoke('get_neo4j_connection_info');
-    if (connInfo && connInfo.password) {
+    if (connInfo) {
       neo4jConfig = {
         uri: connInfo.uri || neo4jConfig.uri,
         user: connInfo.username || neo4jConfig.user,
-        password: connInfo.password
+        password: connInfo.password || neo4jConfig.password
       };
-      console.log('🔧 [MCP] Loaded Neo4j connection info from backend');
-    } else {
-      console.error('🔧 [MCP] Failed to get Neo4j password from backend - Neo4j MCP server will not work');
+      console.log('🔧 [MCP] Loaded Neo4j connection info from shared Docker setup');
     }
   } catch (error) {
-    console.error('🔧 [MCP] Failed to get Neo4j connection info:', error.message);
+    console.log('🔧 [MCP] Using default Neo4j connection info:', error.message);
   }
   
   return bundledServers.map(server => {

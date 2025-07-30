@@ -124,15 +124,9 @@ impl PdfExporter {
                         // Check if this might be the start of a highlight
                         if chars.peek() == Some(&'=') {
                             chars.next(); // consume second =
-                            
-                            // Check if preceded by whitespace or at start
-                            if result.is_empty() || result.chars().last().map_or(true, |c| c.is_whitespace()) {
-                                in_highlight = true;
-                                temp_buffer.clear();
-                            } else {
-                                // Not a highlight start, just regular text
-                                result.push_str("==");
-                            }
+                            // Always treat == as potential highlight start
+                            in_highlight = true;
+                            temp_buffer.clear();
                         } else {
                             result.push(ch);
                         }
@@ -140,22 +134,11 @@ impl PdfExporter {
                         // We're in a highlight, check if this is the end
                         if chars.peek() == Some(&'=') {
                             chars.next(); // consume second =
-                            
-                            // Check if followed by whitespace or at end
-                            let next_char = chars.peek();
-                            if next_char.is_none() || next_char.map_or(false, |&c| c.is_whitespace()) {
-                                // Valid highlight end
-                                result.push_str("<mark>");
-                                result.push_str(&temp_buffer);
-                                result.push_str("</mark>");
-                                in_highlight = false;
-                            } else {
-                                // Not a valid highlight end
-                                result.push_str("==");
-                                result.push_str(&temp_buffer);
-                                result.push_str("==");
-                                in_highlight = false;
-                            }
+                            // Always treat == as highlight end when in highlight mode
+                            result.push_str("<mark>");
+                            result.push_str(&temp_buffer);
+                            result.push_str("</mark>");
+                            in_highlight = false;
                         } else {
                             // Single = inside highlight, add to buffer
                             temp_buffer.push(ch);

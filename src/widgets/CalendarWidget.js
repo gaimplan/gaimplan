@@ -230,7 +230,10 @@ export class CalendarWidget {
             if (window.mcpManager && window.mcpManager.servers && window.mcpManager.servers.get('gaimplan-search')) {
                 console.log('[CalendarWidget] Using MCP search server for daily notes');
                 
-                // Search for daily notes with pattern YYYY-MM-*.md
+                // Get daily notes folder
+                const dailyNotesFolder = await this.getDailyNotesFolder();
+                
+                // Search for daily notes with pattern YYYY-MM-*.md in the daily notes folder
                 const searchPattern = `${year}-${month}-*.md`;
                 
                 try {
@@ -305,11 +308,15 @@ export class CalendarWidget {
             // Create new daily note
             console.log('[CalendarWidget] Creating new daily note:', filename);
             
-            // Default path for daily notes
-            const dailyNotePath = `daily/${filename}`;
+            // Get daily notes folder from settings or use default
+            const dailyNotesFolder = await this.getDailyNotesFolder();
+            const dailyNotePath = `${dailyNotesFolder}/${filename}`;
             
             // Create daily note content with template
             const template = this.getDailyNoteTemplate(date);
+            
+            // Ensure the daily notes folder exists
+            await this.ensureDailyNotesFolder();
             
             // Create the file using the filesystem API
             if (window.createAndOpenFile) {
@@ -633,6 +640,49 @@ export class CalendarWidget {
             currentMonth: this.currentDate.toISOString(),
             dailyNoteTemplate: this.customTemplate || null
         };
+    }
+    
+    async getDailyNotesFolder() {
+        try {
+            // Try to get from vault settings first
+            const vaultSettings = await invoke('get_vault_settings', {
+                vaultPath: window.currentVaultPath
+            });
+            
+            if (vaultSettings && vaultSettings.files && vaultSettings.files.daily_notes_folder) {
+                return vaultSettings.files.daily_notes_folder;
+            }
+        } catch (error) {
+            console.error('[CalendarWidget] Error getting user settings:', error);
+        }
+        
+        // Default to 'Daily Notes'
+        return 'Daily Notes';
+    }
+    
+    async ensureDailyNotesFolder() {
+        try {
+            const folderPath = await this.getDailyNotesFolder();
+            
+            // Check if folder exists using filesystem API
+            if (window.mcpManager && window.mcpManager.servers && window.mcpManager.servers.get('gaimplan-filesystem')) {
+                try {
+                    // Try to read the folder
+                    await window.mcpManager.invokeTool('gaimplan-filesystem', 'read_directory', {
+                        path: folderPath
+                    });
+                } catch (error) {
+                    // Folder doesn't exist, create it
+                    console.log(`[CalendarWidget] Creating daily notes folder: ${folderPath}`);
+                    await invoke('create_directory', {
+                        vaultPath: window.currentVaultPath,
+                        dirPath: folderPath
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('[CalendarWidget] Error ensuring daily notes folder:', error);
+        }
     }
     
     async loadSettings() {

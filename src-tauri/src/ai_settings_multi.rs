@@ -339,6 +339,83 @@ pub async fn set_active_ai_provider(app: AppHandle, provider: String) -> Result<
     Ok(())
 }
 
+#[tauri::command]
+pub async fn migrate_ai_settings(app: AppHandle) -> Result<bool, String> {
+    println!("Checking for AI settings migration...");
+    
+    // Check if old settings exist
+    let old_store = app.store("ai_settings.json")
+        .map_err(|e| format!("Failed to access old store: {}", e))?;
+    
+    let Some(value) = old_store.get("settings") else {
+        println!("No old settings to migrate");
+        return Ok(false);
+    };
+    
+    // Parse old settings
+    #[derive(Deserialize)]
+    struct OldStoredSettings {
+        endpoint: String,
+        api_key_encrypted: Option<String>,
+        model: String,
+        temperature: f32,
+        max_tokens: u32,
+    }
+    
+    let old_settings: OldStoredSettings = serde_json::from_value(value.clone())
+        .map_err(|e| format!("Failed to parse old settings: {}", e))?;
+    
+    // Determine provider from endpoint
+    let provider = if old_settings.endpoint.contains("openai.com") {
+        AIProvider::OpenAI
+    } else if old_settings.endpoint.contains("generativelanguage.googleapis.com") {
+        AIProvider::Gemini
+    } else if old_settings.endpoint.contains("localhost:11434") {
+        AIProvider::Ollama
+    } else if old_settings.endpoint.contains("localhost:1234") {
+        AIProvider::LMStudio
+    } else {
+        // Default to OpenAI for unknown endpoints
+        AIProvider::OpenAI
+    };
+    
+    println!("Migrating settings to provider: {:?}", provider);
+    
+    // Create new settings
+    let new_settings = StoredSettings {
+        provider: provider.clone(),
+        endpoint: old_settings.endpoint,
+        api_key_encrypted: old_settings.api_key_encrypted,
+        model: old_settings.model,
+        temperature: old_settings.temperature,
+        max_tokens: old_settings.max_tokens,
+        system_prompt: None,
+        streaming_enabled: true,
+        last_modified: chrono::Utc::now(),
+    };
+    
+    // Save to new provider-specific store
+    let store_name = get_store_filename(&provider);
+    let new_store = app.store(&store_name)
+        .map_err(|e| format!("Failed to access new store: {}", e))?;
+    
+    let value = serde_json::to_value(&new_settings).map_err(|e| e.to_string())?;
+    new_store.set("settings", value);
+    new_store.save()
+        .map_err(|e| format!("Failed to save migrated settings: {}", e))?;
+    
+    // Set as active provider
+    set_active_ai_provider(app.clone(), provider.as_str().to_string()).await?;
+    
+    // Remove old settings
+    old_store.delete("settings");
+    old_store.save()
+        .map_err(|e| format!("Failed to clean up old settings: {}", e))?;
+    
+    println!("AI settings migration completed successfully");
+    Ok(true)
+}
+
 // Re-export test connection functionality from the old module
 pub use crate::ai_settings::{test_ai_connection};
 

@@ -1245,24 +1245,15 @@ body {
   font-size: 2.5rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 1rem 0;
   letter-spacing: -0.025em;
-}
-
-.welcome-header h2 {
-  font-size: 1.25rem;
-  font-weight: 400;
-  color: var(--text-secondary);
-  margin: 0 0 1.5rem 0;
-  letter-spacing: -0.01em;
 }
 
 .welcome-header p {
   font-size: 1.125rem;
   color: var(--text-secondary);
-  margin: 0 auto;
+  margin: 0;
   line-height: 1.6;
-  max-width: 600px;
 }
 
 .welcome-logo {
@@ -1327,16 +1318,7 @@ body {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 0.25rem 0;
-}
-
-.feature-card h4 {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--accent-primary);
   margin: 0 0 0.75rem 0;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .feature-card p {

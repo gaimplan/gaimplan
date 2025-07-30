@@ -34,7 +34,7 @@ use vault::Vault;
 use editor::EditorManager;
 use pdf_export::{PdfExporter, ExportOptions};
 use ai_settings::{test_ai_connection};
-use ai_settings_multi::{save_ai_settings, get_ai_settings, save_ai_settings_for_provider, get_ai_settings_for_provider, get_active_ai_provider, set_active_ai_provider};
+use ai_settings_multi::{save_ai_settings, get_ai_settings, save_ai_settings_for_provider, get_ai_settings_for_provider, get_active_ai_provider, set_active_ai_provider, migrate_ai_settings};
 use ai_stream::{send_ai_chat, send_ai_chat_with_functions, send_ai_chat_stream, send_ai_chat_with_functions_stream, search_notes_by_name, test_messages, debug_send_ai_chat, check_ollama_status};
 use mcp::MCPManager;
 use mcp_settings::{save_mcp_settings, get_mcp_settings, save_mcp_server_config, delete_mcp_server_config, get_mcp_server_config, list_mcp_server_configs};
@@ -846,6 +846,24 @@ async fn read_image_as_base64(
 }
 
 #[tauri::command]
+async fn create_directory(
+    vault_path: String,
+    dir_path: String,
+) -> Result<(), String> {
+    println!("📁 create_directory called with path: {}", dir_path);
+    
+    let vault_path_buf = PathBuf::from(&vault_path);
+    let full_path = vault_path_buf.join(&dir_path);
+    
+    // Create directory and all parent directories if they don't exist
+    std::fs::create_dir_all(&full_path)
+        .map_err(|e| format!("Failed to create directory: {}", e))?;
+    
+    println!("✅ Directory created successfully: {:?}", full_path);
+    Ok(())
+}
+
+#[tauri::command]
 async fn export_to_pdf(
     markdown_content: String,
     output_path: String,
@@ -1059,6 +1077,7 @@ fn main() {
             get_ai_settings_for_provider,
             get_active_ai_provider,
             set_active_ai_provider,
+            migrate_ai_settings,
             send_ai_chat,
             send_ai_chat_with_functions,
             send_ai_chat_stream,
@@ -1091,6 +1110,7 @@ fn main() {
             reset_vault_settings,
             validate_image_location,
             list_all_vault_settings,
+            create_directory,
             get_widget_settings,
             save_widget_settings,
             initialize_docker,
@@ -1145,6 +1165,20 @@ fn main() {
             // Also manage Docker manager for Docker commands
             app.manage(docker_manager);
             
+            // Run AI settings migration on startup
+            let app_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                match migrate_ai_settings(app_handle).await {
+                    Ok(migrated) => {
+                        if migrated {
+                            println!("✅ AI settings migrated successfully");
+                        }
+                    }
+                    Err(e) => {
+                        println!("❌ AI settings migration error: {}", e);
+                    }
+                }
+            });
             
             Ok(())
         })

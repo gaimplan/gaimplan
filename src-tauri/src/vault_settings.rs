@@ -26,6 +26,12 @@ pub struct EditorSettings {
 pub struct FileSettings {
     pub image_location: String,
     pub image_naming_pattern: String,
+    #[serde(default = "default_daily_notes_folder")]
+    pub daily_notes_folder: String,
+}
+
+fn default_daily_notes_folder() -> String {
+    "Daily Notes".to_string()
 }
 
 impl Default for VaultSettings {
@@ -57,6 +63,7 @@ impl Default for FileSettings {
         FileSettings {
             image_location: "files/".to_string(),
             image_naming_pattern: "Pasted image {timestamp}".to_string(),
+            daily_notes_folder: "Daily Notes".to_string(),
         }
     }
 }

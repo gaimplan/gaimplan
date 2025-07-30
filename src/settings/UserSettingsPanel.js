@@ -14,7 +14,8 @@ export class UserSettingsPanel {
             },
             files: {
                 imageLocation: 'files/',
-                imageNamingPattern: 'Pasted image {timestamp}'
+                imageNamingPattern: 'Pasted image {timestamp}',
+                dailyNotesFolder: 'Daily Notes'
             },
             isDirty: false,
             isSaving: false,
@@ -87,7 +88,8 @@ export class UserSettingsPanel {
             this.state.files = {
                 ...this.state.files,
                 imageLocation: settings.files.image_location || this.state.files.imageLocation,
-                imageNamingPattern: settings.files.image_naming_pattern || this.state.files.imageNamingPattern
+                imageNamingPattern: settings.files.image_naming_pattern || this.state.files.imageNamingPattern,
+                dailyNotesFolder: settings.files.daily_notes_folder || this.state.files.dailyNotesFolder
             };
             this.state.isDirty = false;
         } catch (error) {
@@ -117,7 +119,8 @@ export class UserSettingsPanel {
                 },
                 files: {
                     image_location: this.state.files.imageLocation,
-                    image_naming_pattern: this.state.files.imageNamingPattern
+                    image_naming_pattern: this.state.files.imageNamingPattern,
+                    daily_notes_folder: this.state.files.dailyNotesFolder
                 }
             };
             
@@ -166,7 +169,8 @@ export class UserSettingsPanel {
             this.state.files = {
                 ...this.state.files,
                 imageLocation: settings.files.image_location || this.state.files.imageLocation,
-                imageNamingPattern: settings.files.image_naming_pattern || this.state.files.imageNamingPattern
+                imageNamingPattern: settings.files.image_naming_pattern || this.state.files.imageNamingPattern,
+                dailyNotesFolder: settings.files.daily_notes_folder || this.state.files.dailyNotesFolder
             };
             this.state.isDirty = false;
             
@@ -438,6 +442,16 @@ export class UserSettingsPanel {
                                        onchange="userSettingsPanel.updateFileSetting('imageLocation', this.value)"
                                        class="settings-input">
                                 <p class="form-help">Relative to vault root. Default: files/</p>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Daily Notes Folder:</label>
+                                <input type="text" 
+                                       value="${this.state.files.dailyNotesFolder}"
+                                       placeholder="Daily Notes"
+                                       onchange="userSettingsPanel.updateFileSetting('dailyNotesFolder', this.value)"
+                                       class="settings-input">
+                                <p class="form-help">Folder where daily notes are created. Default: Daily Notes</p>
                             </div>
                         </div>
                     </div>
