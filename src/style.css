@@ -1256,6 +1256,15 @@ body {
   line-height: 1.6;
 }
 
+.welcome-tagline {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin: 1.5rem 0 0 0;
+  letter-spacing: -0.02em;
+  line-height: 1.4;
+}
+
 .welcome-logo {
   width: 120px;
   height: 120px;
@@ -1318,14 +1327,24 @@ body {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 0.5rem 0;
+}
+
+.feature-card h4 {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin: 0 0 1rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.7;
 }
 
 .feature-card p {
   font-size: 0.875rem;
   color: var(--text-secondary);
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .quick-start {
@@ -1342,6 +1361,7 @@ body {
 
 .features-section {
   margin-bottom: 3rem;
+  margin-top: 3rem;
 }
 
 .features-section h3 {
