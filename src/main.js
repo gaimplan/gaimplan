@@ -17,6 +17,8 @@ import { WidgetSidebar } from './widgets/WidgetSidebar.js';
 import { perfMonitor } from './performance/PerformanceMonitor.js';
 import { perfTestSuite } from './performance/PerformanceTestSuite.js';
 import { globalSearch } from './search/GlobalSearch.js';
+import windowContext from './contexts/WindowContext.js';
+import { VaultPicker } from './components/VaultPicker.js';
 
 console.log('✅ Tauri v2 APIs and editor components imported successfully!');
 console.log('🔍 EnhancedChatPanel class:', EnhancedChatPanel);
@@ -821,8 +823,18 @@ window.onMCPToolExecuted = function(toolName) {
   // MCP status removed from UI
 }
 
+let keyboardShortcutsInitialized = false;
+
 function setupTabKeyboardShortcuts() {
-  document.addEventListener('keydown', (e) => {
+  // Only set up keyboard shortcuts once
+  if (keyboardShortcutsInitialized) {
+    console.log('⚠️ Keyboard shortcuts already initialized, skipping...');
+    return;
+  }
+  keyboardShortcutsInitialized = true;
+  console.log('⌨️ Setting up keyboard shortcuts...');
+  
+  document.addEventListener('keydown', async (e) => {
     // Debug keyboard events with Shift
     if (e.shiftKey && e.metaKey) {
       console.log('Shift+Cmd key pressed:', e.key, 'keyCode:', e.keyCode);
@@ -831,8 +843,42 @@ function setupTabKeyboardShortcuts() {
     // Cmd+F: Global Search
     if ((e.metaKey || e.ctrlKey) && e.key === 'f' && !e.shiftKey) {
       e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       console.log('Cmd+F pressed - Opening global search');
-      globalSearch.toggle();
+      console.log('globalSearch instance exists:', !!globalSearch);
+      console.log('globalSearch state:', {
+        container: !!globalSearch?.container,
+        isVisible: globalSearch?.isVisible,
+        instance: globalSearch
+      });
+      try {
+        globalSearch.toggle();
+      } catch (error) {
+        console.error('Error calling globalSearch.toggle():', error);
+      }
+      return;
+    }
+    
+    // Cmd+Shift+F: Local search in editor
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'f' || e.key === 'F')) {
+      e.preventDefault();
+      console.log('Cmd+Shift+F pressed - Opening local search');
+      
+      // Get the active editor
+      const tabManager = paneManager ? paneManager.getActiveTabManager() : null;
+      if (tabManager) {
+        const activeTab = tabManager.getActiveTab();
+        if (activeTab && activeTab.editor && activeTab.editor.view) {
+          console.log('Opening search panel in active editor');
+          // Call the openSearch method on the editor
+          activeTab.editor.openSearch();
+        } else {
+          console.log('No active editor found');
+        }
+      } else {
+        console.log('No tab manager found');
+      }
       return;
     }
     
@@ -1652,10 +1698,11 @@ window.openVault = async function() {
     console.log('📂 Selected folder:', folderPath);
     
     if (btn) btn.textContent = 'Opening...';
-    const vaultInfo = await invoke('open_vault', { path: folderPath });
     
-    console.log('✅ Vault opened:', vaultInfo);
-    updateUIWithVault(vaultInfo);
+    // Use WindowContext to open vault
+    await windowContext.openVault(folderPath);
+    
+    console.log('✅ Vault opened via WindowContext');
     
   } catch (error) {
     console.error('❌ Error opening vault:', error);
@@ -1714,7 +1761,9 @@ window.createVault = async function() {
     });
     
     console.log('✅ Vault created:', vaultInfo);
-    updateUIWithVault(vaultInfo);
+    
+    // Use WindowContext to open the newly created vault
+    await windowContext.openVault(vaultInfo.path);
     
   } catch (error) {
     console.error('❌ Error creating vault:', error);
@@ -2316,26 +2365,9 @@ async function initializeApp() {
       <div class="app-container">
         <div class="sidebar">
           <div class="sidebar-header">
-            <h2 class="vault-name">No Vault</h2>
+            <div id="vault-picker-container"></div>
             <div class="header-actions">
-              <div class="vault-menu-container">
-                <button id="vault-menu" class="icon-button" title="Vault menu" onclick="toggleVaultMenu()">⋮</button>
-                <div id="vault-dropdown" class="vault-dropdown hidden">
-                  <div class="dropdown-item" onclick="window.openVault()">
-                    <span class="dropdown-icon">📁</span>
-                    <span class="dropdown-label">Open Vault</span>
-                  </div>
-                  <div class="dropdown-item" onclick="window.createVault()">
-                    <span class="dropdown-icon">➕</span>
-                    <span class="dropdown-label">Create Vault</span>
-                  </div>
-                  <div class="dropdown-divider"></div>
-                  <div class="dropdown-item" onclick="closeCurrentVault()">
-                    <span class="dropdown-icon">❌</span>
-                    <span class="dropdown-label">Close Vault</span>
-                  </div>
-                </div>
-              </div>
+              <!-- Header actions will be populated dynamically -->
             </div>
           </div>
           <div class="file-tree" id="file-tree">
@@ -2524,23 +2556,24 @@ async function initializeApp() {
     // Initialize MCP Settings Panel
     await initializeMCPSettings();
     
-    // Check for last opened vault
-    try {
-      const lastVault = await invoke('get_last_vault');
-      if (lastVault) {
-        console.log('🔄 Found last vault:', lastVault);
-        // Open the last vault
-        const vaultInfo = await invoke('open_vault', { path: lastVault });
-        console.log('✅ Reopened last vault:', vaultInfo);
-        await updateUIWithVault(vaultInfo);
-      } else {
-        // No last vault, show welcome screen
+    // Check for last opened vault - now handled by WindowContext
+    // WindowContext will check URL params and saved state
+    if (!windowContext.hasVault) {
+      try {
+        const lastVault = await invoke('get_last_vault');
+        if (lastVault) {
+          console.log('🔄 Found last vault:', lastVault);
+          // Let WindowContext handle opening
+          await windowContext.openVault(lastVault);
+        } else {
+          // No last vault, show welcome screen
+          showWelcomeScreen();
+        }
+      } catch (error) {
+        console.error('⚠️ Failed to load last vault:', error);
+        // Show welcome screen as fallback
         showWelcomeScreen();
       }
-    } catch (error) {
-      console.error('⚠️ Failed to load last vault:', error);
-      // Show welcome screen as fallback
-      showWelcomeScreen();
     }
     
     // Add keyboard support for rename modal
@@ -4170,6 +4203,87 @@ function initializeChatResize() {
   }
 }
 
+// Initialize window-specific components after vault is opened
+async function initializeWindowComponents() {
+  console.log('🔧 Initializing window-specific components...');
+  
+  // Register components with window context
+  if (paneManager) {
+    // Create a wrapper with cleanup that resets global variables
+    const paneManagerWrapper = {
+      ...paneManager,
+      cleanup: async function() {
+        if (paneManager.cleanup) {
+          await paneManager.cleanup();
+        }
+        paneManager = null;
+        window.paneManager = null;
+        window.tabManager = null;
+      }
+    };
+    windowContext.registerComponent('paneManager', paneManagerWrapper);
+  }
+  
+  if (window.tabManager) {
+    windowContext.registerComponent('tabManager', window.tabManager);
+  }
+  
+  // Re-initialize components that need vault context
+  if (windowContext.hasVault) {
+    // Get vault info
+    const vaultInfo = await windowContext.getVaultInfo();
+    
+    // Show vault actions (sidebar ribbon)
+    const vaultActions = document.getElementById('vault-actions');
+    if (vaultActions) {
+      vaultActions.style.display = 'flex';
+    }
+    
+    // Refresh file tree
+    await refreshFileTree();
+    
+    // Start file system watcher for this vault
+    try {
+      console.log('👁️ Starting file system watcher...');
+      await invoke('start_file_watcher', { vaultPath: vaultInfo.path });
+      console.log('✅ File system watcher started');
+    } catch (error) {
+      console.error('❌ Failed to start file watcher:', error);
+    }
+    
+    // Initialize editor if needed (or reinitialize after cleanup)
+    const editorWrapper = document.getElementById('editor-wrapper');
+    if (editorWrapper) {
+      console.log('🔄 Checking editor state:', { 
+        paneManager: !!paneManager, 
+        tabManager: !!window.tabManager,
+        paneManagerContainer: paneManager?.container 
+      });
+      
+      // Check if paneManager needs to be initialized/reinitialized
+      // Also check if the paneManager has been cleaned up (no container)
+      const needsInit = !paneManager || !window.tabManager || !paneManager.container || paneManager.panes.size === 0;
+      
+      if (needsInit) {
+        console.log('🔄 Re-initializing editor after vault switch...');
+        // Clean up globalSearch to ensure it re-mounts properly
+        globalSearch.cleanup();
+        // Reset the variables to ensure clean state
+        paneManager = null;
+        window.paneManager = null;
+        window.tabManager = null;
+        await initializeEditor();
+      } else {
+        // Ensure tabManager is available globally
+        const tabManager = paneManager.getActiveTabManager();
+        if (tabManager) {
+          window.tabManager = tabManager;
+        }
+      }
+    }
+  }
+}
+
 // Start the app when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🎯 DOM loaded - Starting initialization...');
@@ -4177,7 +4291,52 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Start performance monitoring
   perfMonitor.startMeasure('app_initialization');
   
+  // Initialize window context first
+  try {
+    console.log('🪟 Initializing WindowContext...');
+    await windowContext.initialize();
+    
+    // Listen for vault opened event
+    windowContext.on('vault-opened', async (vaultInfo) => {
+      console.log('📁 Vault opened in window:', vaultInfo);
+      
+      // Update UI with vault info
+      const vaultNameElement = document.querySelector('.vault-name');
+      if (vaultNameElement) {
+        vaultNameElement.textContent = vaultInfo.name;
+      }
+      
+      // Initialize window-specific components
+      await initializeWindowComponents();
+      
+      // Force refresh of vault picker
+      if (window.vaultPicker) {
+        window.vaultPicker.currentVault = vaultInfo;
+        window.vaultPicker.render();
+      }
+      
+      // Refresh GraphSync status to pick up new vault context
+      if (window.graphSyncStatus) {
+        console.log('🔄 Refreshing GraphSync status for new vault');
+        await window.graphSyncStatus.fetchStatus();
+      }
+    });
+    
+    // Now check for initial vault (from URL params or saved state)
+    await windowContext.checkInitialVault();
+  } catch (error) {
+    console.error('❌ Failed to initialize WindowContext:', error);
+  }
+  
   await initializeApp();
+  
+  // Initialize VaultPicker
+  const vaultPickerContainer = document.getElementById('vault-picker-container');
+  if (vaultPickerContainer) {
+    console.log('🗂️ Initializing VaultPicker...');
+    window.vaultPicker = new VaultPicker(vaultPickerContainer);
+  }
+  
   initializeChatResize();
   
   // Set up graph sync event listeners

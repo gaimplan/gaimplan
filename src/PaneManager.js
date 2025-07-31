@@ -27,6 +27,11 @@ export class PaneManager {
         
         // Initialize with single pane
         this.initializeSinglePane();
+        
+        // Register with window context if available
+        if (window.windowContext) {
+            window.windowContext.registerComponent('paneManager', this);
+        }
     }
     
     /**
@@ -411,5 +416,33 @@ export class PaneManager {
         if (this.listeners[event]) {
             this.listeners[event].forEach(callback => callback(data));
         }
+    }
+    
+    /**
+     * Cleanup method for window shutdown
+     */
+    async cleanup() {
+        console.log('🧹 Cleaning up PaneManager');
+        
+        // Close all tabs in all panes
+        for (const [paneId, pane] of this.panes) {
+            if (pane.tabManager) {
+                const tabIds = [...pane.tabManager.tabs.keys()];
+                for (const tabId of tabIds) {
+                    await pane.tabManager.closeTab(tabId, true);
+                }
+            }
+        }
+        
+        // Clear listeners
+        for (const event in this.listeners) {
+            this.listeners[event] = [];
+        }
+        
+        // Clear references
+        this.panes.clear();
+        this.container = null;
+        this.paneContainer = null;
+        this.divider = null;
     }
 }

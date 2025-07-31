@@ -1,24 +1,24 @@
-use tauri::State;
-use crate::AppState;
+use tauri::{State, Window};
+use crate::{AppState, refactored_app_state::RefactoredAppState};
 use crate::search::{HybridSearchManager, HybridSearchResult, SearchQuery};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
 #[tauri::command]
 pub async fn hybrid_search(
+    window: Window,
     state: State<'_, AppState>,
+    refactored_state: State<'_, RefactoredAppState>,
     query: SearchQuery,
 ) -> Result<Vec<HybridSearchResult>, String> {
-    // Get current vault path and name
-    let vault_guard = state.vault.lock().await;
-    let vault = vault_guard.as_ref()
+    // Get current vault path from window state
+    let window_id = window.label();
+    let vault_path = refactored_state.get_window_vault_path(&window_id).await
         .ok_or_else(|| "No vault is currently open".to_string())?;
-    let vault_path = vault.path().to_path_buf();
     let vault_name = vault_path.file_name()
         .and_then(|n| n.to_str())
         .unwrap_or("default")
         .to_string();
-    drop(vault_guard);
 
     // Get connection info to get the vault_id that matches what's in the database
     use crate::docker::shared::SharedDockerManager;
@@ -40,7 +40,9 @@ pub async fn hybrid_search(
 
 #[tauri::command]
 pub async fn search_with_mode(
+    window: Window,
     state: State<'_, AppState>,
+    refactored_state: State<'_, RefactoredAppState>,
     query: String,
     mode: String,
     max_results: Option<usize>,
@@ -66,7 +68,7 @@ pub async fn search_with_mode(
         },
     };
 
-    hybrid_search(state, search_query).await
+    hybrid_search(window, state, refactored_state, search_query).await
 }
 
 #[tauri::command]
@@ -88,7 +90,9 @@ pub async fn get_search_capabilities(
 
 #[tauri::command]
 pub async fn resolve_node_id_to_path(
+    window: Window,
     state: State<'_, AppState>,
+    refactored_state: State<'_, RefactoredAppState>,
     node_id: String,
 ) -> Result<Option<String>, String> {
     // Get graph manager
@@ -125,7 +129,9 @@ pub async fn resolve_node_id_to_path(
 
 #[tauri::command]
 pub async fn batch_resolve_node_ids(
+    window: Window,
     state: State<'_, AppState>,
+    refactored_state: State<'_, RefactoredAppState>,
     node_ids: Vec<String>,
 ) -> Result<std::collections::HashMap<String, String>, String> {
     use std::collections::HashMap;

@@ -29,6 +29,11 @@ mod docker;
 mod graph;
 mod commands;
 mod search;
+mod window_state;
+mod refactored_app_state;
+mod window_factory;
+mod window_lifecycle;
+mod window_commands_basic;
 
 use vault::Vault;
 use editor::EditorManager;
@@ -42,6 +47,8 @@ use vault_settings::{get_vault_settings, save_vault_settings, reset_vault_settin
 use widget_settings::{get_widget_settings, save_widget_settings};
 use docker::{DockerManager, initialize_docker, start_docker_containers, stop_docker_containers, get_docker_status, wait_for_docker_healthy};
 use graph::{GraphManagerImpl, GraphManagerTrait, update_queue::{UpdateQueue, UpdateQueueConfig}};
+use window_commands_basic::{open_vault_in_new_window_basic, get_recent_vaults_basic, manage_vaults_basic};
+use refactored_app_state::{RefactoredAppState, extract_window_id};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NoteSearchResult {
@@ -83,7 +90,45 @@ struct FileTree {
 }
 
 #[tauri::command]
-async fn open_vault(path: String, app: tauri::AppHandle, state: State<'_, AppState>) -> Result<VaultInfo, String> {
+async fn get_window_state(window: tauri::Window, refactored_state: State<'_, RefactoredAppState>) -> Result<Option<VaultInfo>, String> {
+    let window_id = extract_window_id(&window);
+    
+    match refactored_state.get_window_state(&window_id).await {
+        Some(window_state) => {
+            let vault_lock = window_state.vault.lock().await;
+            match &*vault_lock {
+                Some(vault) => {
+                    let path = vault.path();
+                    Ok(Some(VaultInfo {
+                        path: path.to_string_lossy().to_string(),
+                        name: path.file_name()
+                            .and_then(|n| n.to_str())
+                            .unwrap_or("Untitled")
+                            .to_string(),
+                    }))
+                }
+                None => Ok(None),
+            }
+        }
+        None => Ok(None),
+    }
+}
+
+#[tauri::command]
+async fn window_closing(window: tauri::Window, refactored_state: State<'_, RefactoredAppState>) -> Result<(), String> {
+    let window_id = extract_window_id(&window);
+    println!("Window {} is closing", window_id);
+    
+    // Perform any cleanup needed
+    if let Err(e) = refactored_state.unregister_window_vault(&window_id).await {
+        eprintln!("Warning: Failed to unregister window vault during close: {}", e);
+    }
+    
+    Ok(())
+}
+
+#[tauri::command]
+async fn open_vault(path: String, window: tauri::Window, app: tauri::AppHandle, refactored_state: State<'_, RefactoredAppState>) -> Result<VaultInfo, String> {
     let vault_path = PathBuf::from(&path);
     
     if !vault_path.exists() {
@@ -94,9 +139,6 @@ async fn open_vault(path: String, app: tauri::AppHandle, state: State<'_, AppSta
         return Err("Path is not a directory".to_string());
     }
     
-    let vault = Vault::new(vault_path.clone())
-        .map_err(|e| format!("Failed to open vault: {}", e))?;
-    
     let vault_info = VaultInfo {
         path: path.clone(),
         name: vault_path.file_name()
@@ -105,14 +147,22 @@ async fn open_vault(path: String, app: tauri::AppHandle, state: State<'_, AppSta
             .to_string(),
     };
     
-    let mut vault_lock = state.vault.lock().await;
-    *vault_lock = Some(vault);
+    // Get window ID and register with vault
+    let window_id = extract_window_id(&window);
+    
+    // Register window if not already registered
+    if refactored_state.get_window_state(&window_id).await.is_none() {
+        refactored_state.register_window_with_id(window_id.clone(), app.clone()).await?;
+    }
+    
+    // Register the window with the vault
+    refactored_state.register_window_vault(&window_id, vault_path.clone()).await?;
     
     // Initialize and start Neo4j/Qdrant containers using SharedDockerManager
-    let graph_manager = state.graph_manager.clone();
-    let update_queue_ref = state.update_queue.clone();
+    let docker_manager = refactored_state.docker_manager.clone();
     let vault_path_clone = vault_path.clone();
     let vault_name = vault_info.name.clone();
+    let window_id_clone = window_id.clone();
     tauri::async_runtime::spawn(async move {
         println!("🔄 Initializing graph services for vault...");
         
@@ -148,17 +198,11 @@ async fn open_vault(path: String, app: tauri::AppHandle, state: State<'_, AppSta
                         
                         match new_graph_manager.connect(&graph_config).await {
                             Ok(_) => {
-                                println!("✅ Connected to graph databases");
+                                println!("✅ Connected to graph databases for window {}", window_id_clone);
                                 
-                                // Store the connected graph manager
-                                let mut graph_lock = graph_manager.lock().await;
-                                *graph_lock = Some(new_graph_manager.clone());
-                                
-                                // Initialize update queue
+                                // Initialize update queue for this vault
                                 let update_queue_config = UpdateQueueConfig::default();
-                                let new_update_queue = Arc::new(UpdateQueue::new(new_graph_manager.clone(), update_queue_config));
-                                let mut queue_lock = update_queue_ref.lock().await;
-                                *queue_lock = Some(new_update_queue);
+                                let _new_update_queue = Arc::new(UpdateQueue::new(new_graph_manager.clone(), update_queue_config));
                                 println!("📦 Initialized update queue for batch processing");
                                 println!("✅ Graph sync is now enabled automatically");
                             }
@@ -199,59 +243,19 @@ async fn read_file_base64(path: String) -> Result<String, String> {
 }
 
 #[tauri::command]
-async fn start_file_watcher(vault_path: String, app: tauri::AppHandle, state: State<'_, AppState>) -> Result<(), String> {
-    // Stop any existing watcher
-    let mut watcher_lock = state.watcher.lock().await;
-    *watcher_lock = None;
-    
+async fn start_file_watcher(vault_path: String, window: tauri::Window, refactored_state: State<'_, RefactoredAppState>) -> Result<(), String> {
+    let window_id = extract_window_id(&window);
     let path = PathBuf::from(&vault_path);
     
-    // Set up file watcher for the vault
-    let (tx, rx) = channel();
-    let app_handle = app.clone();
-    
-    // Spawn a thread to handle file system events
-    std::thread::spawn(move || {
-        use std::time::Instant;
-        let mut last_emit_time = Instant::now();
-        let mut pending_event = false;
-        
-        loop {
-            // Check for events with a timeout
-            match rx.recv_timeout(Duration::from_millis(100)) {
-                Ok(Ok(event)) => {
-                    println!("📁 File system event: {:?}", event);
-                    pending_event = true;
-                    last_emit_time = Instant::now();
-                }
-                Ok(Err(e)) => println!("⚠️ Watch error: {:?}", e),
-                Err(_) => {
-                    // Timeout - check if we should emit
-                    if pending_event && last_emit_time.elapsed() > Duration::from_millis(300) {
-                        println!("📢 Emitting vault-files-changed event");
-                        let _ = app_handle.emit("vault-files-changed", ());
-                        pending_event = false;
-                    }
-                }
-            }
-        }
-    });
-    
-    // Create and start the watcher
-    let mut watcher = notify::recommended_watcher(tx)
-        .map_err(|e| format!("Failed to create file watcher: {}", e))?;
-    
-    watcher.watch(&path, RecursiveMode::Recursive)
-        .map_err(|e| format!("Failed to watch vault directory: {}", e))?;
-    
-    *watcher_lock = Some(watcher);
+    // Register the window with the vault (which sets up file watching)
+    refactored_state.register_window_vault(&window_id, path).await?;
     println!("✅ File watcher started for: {}", vault_path);
     
     Ok(())
 }
 
 #[tauri::command]
-async fn create_vault(path: String, app: tauri::AppHandle, state: State<'_, AppState>) -> Result<VaultInfo, String> {
+async fn create_vault(path: String, window: tauri::Window, app: tauri::AppHandle, refactored_state: State<'_, RefactoredAppState>) -> Result<VaultInfo, String> {
     let vault_path = PathBuf::from(&path);
     
     if vault_path.exists() {
@@ -261,23 +265,29 @@ async fn create_vault(path: String, app: tauri::AppHandle, state: State<'_, AppS
     std::fs::create_dir_all(&vault_path)
         .map_err(|e| format!("Failed to create directory: {}", e))?;
     
-    open_vault(path, app, state).await
+    open_vault(path, window, app, refactored_state).await
 }
 
 #[tauri::command]
-async fn get_vault_info(state: State<'_, AppState>) -> Result<Option<VaultInfo>, String> {
-    let vault_lock = state.vault.lock().await;
+async fn get_vault_info(window: tauri::Window, refactored_state: State<'_, RefactoredAppState>) -> Result<Option<VaultInfo>, String> {
+    let window_id = extract_window_id(&window);
     
-    match &*vault_lock {
-        Some(vault) => {
-            let path = vault.path();
-            Ok(Some(VaultInfo {
-                path: path.to_string_lossy().to_string(),
-                name: path.file_name()
-                    .and_then(|n| n.to_str())
-                    .unwrap_or("Untitled")
-                    .to_string(),
-            }))
+    match refactored_state.get_window_state(&window_id).await {
+        Some(window_state) => {
+            let vault_lock = window_state.vault.lock().await;
+            match &*vault_lock {
+                Some(vault) => {
+                    let path = vault.path();
+                    Ok(Some(VaultInfo {
+                        path: path.to_string_lossy().to_string(),
+                        name: path.file_name()
+                            .and_then(|n| n.to_str())
+                            .unwrap_or("Untitled")
+                            .to_string(),
+                    }))
+                }
+                None => Ok(None),
+            }
         }
         None => Ok(None),
     }
@@ -366,7 +376,7 @@ async fn select_folder_for_create(app: tauri::AppHandle) -> Result<Option<String
 }
 
 #[tauri::command]
-async fn create_new_vault(parent_path: String, vault_name: String, app: tauri::AppHandle, state: State<'_, AppState>) -> Result<VaultInfo, String> {
+async fn create_new_vault(parent_path: String, vault_name: String, window: tauri::Window, app: tauri::AppHandle, refactored_state: State<'_, RefactoredAppState>) -> Result<VaultInfo, String> {
     if vault_name.trim().is_empty() {
         return Err("Vault name cannot be empty".to_string());
     }
@@ -393,14 +403,17 @@ async fn create_new_vault(parent_path: String, vault_name: String, app: tauri::A
     
     // Now open the vault
     let vault_path_str = vault_path.to_string_lossy().to_string();
-    open_vault(vault_path_str, app, state).await
+    open_vault(vault_path_str, window, app, refactored_state).await
 }
 
 #[tauri::command]
-async fn get_file_tree(state: State<'_, AppState>) -> Result<FileTree, String> {
-    let vault_lock = state.vault.lock().await;
+async fn get_file_tree(window: tauri::Window, refactored_state: State<'_, RefactoredAppState>) -> Result<FileTree, String> {
+    let window_id = extract_window_id(&window);
     
-    match &*vault_lock {
+    match refactored_state.get_window_state(&window_id).await {
+        Some(window_state) => {
+            let vault_lock = window_state.vault.lock().await;
+            match &*vault_lock {
         Some(vault) => {
             let files = vault.list_markdown_files()
                 .map_err(|e| format!("Failed to list files: {}", e))?;
@@ -478,68 +491,67 @@ async fn get_file_tree(state: State<'_, AppState>) -> Result<FileTree, String> {
             // Sort files for consistent tree view
             file_infos.sort_by(|a, b| a.path.cmp(&b.path));
             
-            Ok(FileTree { files: file_infos })
+                    Ok(FileTree { files: file_infos })
+                }
+                None => Err("Vault not open".to_string()),
+            }
         }
-        None => Err("Vault not open".to_string()),
+        None => Err("Window not found".to_string()),
     }
 }
 
 #[tauri::command]
-async fn read_file_content(file_path: String, state: State<'_, AppState>) -> Result<String, String> {
+async fn read_file_content(file_path: String, window: tauri::Window, refactored_state: State<'_, RefactoredAppState>) -> Result<String, String> {
     println!("📖 read_file_content called with path: {}", file_path);
 
-    let vault_lock = state.vault.lock().await;
+    let window_id = extract_window_id(&window);
 
-    match &*vault_lock {
-        Some(vault) => {
-            let path = std::path::Path::new(&file_path);
-            println!("📁 Vault path: {:?}", vault.path());
-            println!("📄 Reading relative path: {:?}", path);
+    match refactored_state.get_window_state(&window_id).await {
+        Some(window_state) => {
+            let vault_lock = window_state.vault.lock().await;
+            match &*vault_lock {
+                Some(vault) => {
+                    let path = std::path::Path::new(&file_path);
+                    println!("📁 Vault path: {:?}", vault.path());
+                    println!("📄 Reading relative path: {:?}", path);
 
-            vault.read_file(path)
-                .map_err(|e| {
-                    println!("❌ Failed to read file: {}", e);
-                    format!("Failed to read file: {}", e)
-                })
+                    vault.read_file(path)
+                        .map_err(|e| {
+                            println!("❌ Failed to read file: {}", e);
+                            format!("Failed to read file: {}", e)
+                        })
+                }
+                None => Err("No vault opened".to_string()),
+            }
         }
-        None => Err("No vault opened".to_string()),
+        None => Err("Window not found".to_string()),
     }
 }
 
 #[tauri::command]
-async fn write_file_content(file_path: String, content: String, state: State<'_, AppState>) -> Result<(), String> {
-    let vault_lock = state.vault.lock().await;
+async fn write_file_content(file_path: String, content: String, window: tauri::Window, refactored_state: State<'_, RefactoredAppState>) -> Result<(), String> {
+    let window_id = extract_window_id(&window);
 
-    match &*vault_lock {
-        Some(vault) => {
-            let path = std::path::Path::new(&file_path);
-            
-            // First, write the file to disk
-            vault.write_file(path, &content)
-                .map_err(|e| format!("Failed to write file: {}", e))?;
-            
-            // Then, trigger Neo4j sync through update queue (fire-and-forget)
-            let vault_path = vault.path().to_path_buf();
-            let full_path = vault.path().join(path);
-            let update_queue = state.update_queue.clone();
-            
-            // Spawn background task for Neo4j sync via update queue
-            tokio::spawn(async move {
-                // Check if update queue is initialized
-                let queue_lock = update_queue.lock().await;
-                if let Some(ref queue) = *queue_lock {
-                    // Add update to queue (debouncing and batching handled internally)
-                    if let Err(e) = queue.add_update(full_path, vault_path, &content).await {
-                        eprintln!("⚠️ Failed to queue update to graph: {}", e);
-                        // Don't propagate error - we don't want to block saves
-                    }
+    match refactored_state.get_window_state(&window_id).await {
+        Some(window_state) => {
+            let vault_lock = window_state.vault.lock().await;
+            match &*vault_lock {
+                Some(vault) => {
+                    let path = std::path::Path::new(&file_path);
+                    
+                    // First, write the file to disk
+                    vault.write_file(path, &content)
+                        .map_err(|e| format!("Failed to write file: {}", e))?;
+                    
+                    // For now, skip the update queue integration - it needs per-window setup
+                    // TODO: Implement per-window update queue in the WindowState
+                    
+                    Ok(())
                 }
-                // If update queue is not initialized, skip silently
-            });
-            
-            Ok(())
+                None => Err("No vault opened".to_string()),
+            }
         }
-        None => Err("No vault opened".to_string()),
+        None => Err("Window not found".to_string()),
     }
 }
 
@@ -570,41 +582,50 @@ async fn fetch_image_as_base64(url: String) -> Result<String, String> {
 }
 
 #[tauri::command]
-async fn create_new_file(file_name: String, state: State<'_, AppState>) -> Result<(), String> {
+async fn create_new_file(file_name: String, window: tauri::Window, refactored_state: State<'_, RefactoredAppState>) -> Result<(), String> {
     println!("📝 create_new_file called with name: {}", file_name);
 
-    let vault_lock = state.vault.lock().await;
+    let window_id = extract_window_id(&window);
 
-    match &*vault_lock {
-        Some(vault) => {
-            let path = std::path::Path::new(&file_name);
-            println!("📁 Vault path: {:?}", vault.path());
-            println!("📄 Creating file: {:?}", path);
+    match refactored_state.get_window_state(&window_id).await {
+        Some(window_state) => {
+            let vault_lock = window_state.vault.lock().await;
+            match &*vault_lock {
+                Some(vault) => {
+                    let path = std::path::Path::new(&file_name);
+                    println!("📁 Vault path: {:?}", vault.path());
+                    println!("📄 Creating file: {:?}", path);
 
-            // Create default content for new file
-            let default_content = format!("# {}",
-                path.file_stem()
-                    .and_then(|s| s.to_str())
-                    .unwrap_or("Untitled")
-            );
+                    // Create default content for new file
+                    let default_content = format!("# {}",
+                        path.file_stem()
+                            .and_then(|s| s.to_str())
+                            .unwrap_or("Untitled")
+                    );
 
-            vault.write_file(path, &default_content)
-                .map_err(|e| {
-                    println!("❌ Failed to create file: {}", e);
-                    format!("Failed to create file: {}", e)
-                })
+                    vault.write_file(path, &default_content)
+                        .map_err(|e| {
+                            println!("❌ Failed to create file: {}", e);
+                            format!("Failed to create file: {}", e)
+                        })
+                }
+                None => Err("No vault opened".to_string()),
+            }
         }
-        None => Err("No vault opened".to_string()),
+        None => Err("Window not found".to_string()),
     }
 }
 
 #[tauri::command]
-async fn create_new_folder(folder_name: String, state: State<'_, AppState>) -> Result<(), String> {
+async fn create_new_folder(folder_name: String, window: tauri::Window, refactored_state: State<'_, RefactoredAppState>) -> Result<(), String> {
     println!("📂 create_new_folder called with name: {}", folder_name);
 
-    let vault_lock = state.vault.lock().await;
+    let window_id = extract_window_id(&window);
 
-    match &*vault_lock {
+    match refactored_state.get_window_state(&window_id).await {
+        Some(window_state) => {
+            let vault_lock = window_state.vault.lock().await;
+            match &*vault_lock {
         Some(vault) => {
             let folder_path = vault.path().join(&folder_name);
             println!("📁 Creating folder at: {:?}", folder_path);
@@ -614,18 +635,24 @@ async fn create_new_folder(folder_name: String, state: State<'_, AppState>) -> R
                     println!("❌ Failed to create folder: {}", e);
                     format!("Failed to create folder: {}", e)
                 })
+                }
+                None => Err("No vault opened".to_string()),
+            }
         }
-        None => Err("No vault opened".to_string()),
+        None => Err("Window not found".to_string()),
     }
 }
 
 #[tauri::command]
-async fn delete_file(file_path: String, state: State<'_, AppState>) -> Result<(), String> {
+async fn delete_file(file_path: String, window: tauri::Window, refactored_state: State<'_, RefactoredAppState>) -> Result<(), String> {
     println!("🗑️ delete_file called with path: {}", file_path);
 
-    let vault_lock = state.vault.lock().await;
+    let window_id = extract_window_id(&window);
 
-    match &*vault_lock {
+    match refactored_state.get_window_state(&window_id).await {
+        Some(window_state) => {
+            let vault_lock = window_state.vault.lock().await;
+            match &*vault_lock {
         Some(vault) => {
             let path = vault.path().join(&file_path);
             println!("📁 Deleting file at: {:?}", path);
@@ -639,18 +666,24 @@ async fn delete_file(file_path: String, state: State<'_, AppState>) -> Result<()
             } else {
                 Err("Path is not a file".to_string())
             }
+                }
+                None => Err("No vault opened".to_string()),
+            }
         }
-        None => Err("No vault opened".to_string()),
+        None => Err("Window not found".to_string()),
     }
 }
 
 #[tauri::command]
-async fn move_file(old_path: String, new_path: String, state: State<'_, AppState>) -> Result<(), String> {
+async fn move_file(old_path: String, new_path: String, window: tauri::Window, refactored_state: State<'_, RefactoredAppState>) -> Result<(), String> {
     println!("📦 move_file called: {} -> {}", old_path, new_path);
 
-    let vault_lock = state.vault.lock().await;
+    let window_id = extract_window_id(&window);
 
-    match &*vault_lock {
+    match refactored_state.get_window_state(&window_id).await {
+        Some(window_state) => {
+            let vault_lock = window_state.vault.lock().await;
+            match &*vault_lock {
         Some(vault) => {
             let old_full_path = vault.path().join(&old_path);
             let new_full_path = vault.path().join(&new_path);
@@ -668,18 +701,24 @@ async fn move_file(old_path: String, new_path: String, state: State<'_, AppState
                     println!("❌ Failed to move file: {}", e);
                     format!("Failed to move file: {}", e)
                 })
+                }
+                None => Err("No vault opened".to_string()),
+            }
         }
-        None => Err("No vault opened".to_string()),
+        None => Err("Window not found".to_string()),
     }
 }
 
 #[tauri::command]
-async fn rename_file(old_path: String, new_path: String, state: State<'_, AppState>) -> Result<(), String> {
+async fn rename_file(old_path: String, new_path: String, window: tauri::Window, refactored_state: State<'_, RefactoredAppState>) -> Result<(), String> {
     println!("✏️ rename_file called: {} -> {}", old_path, new_path);
 
-    let vault_lock = state.vault.lock().await;
+    let window_id = extract_window_id(&window);
 
-    match &*vault_lock {
+    match refactored_state.get_window_state(&window_id).await {
+        Some(window_state) => {
+            let vault_lock = window_state.vault.lock().await;
+            match &*vault_lock {
         Some(vault) => {
             let old_full_path = vault.path().join(&old_path);
             let new_full_path = vault.path().join(&new_path);
@@ -697,8 +736,11 @@ async fn rename_file(old_path: String, new_path: String, state: State<'_, AppSta
                     println!("❌ Failed to rename file: {}", e);
                     format!("Failed to rename file: {}", e)
                 })
+                }
+                None => Err("No vault opened".to_string()),
+            }
         }
-        None => Err("No vault opened".to_string()),
+        None => Err("Window not found".to_string()),
     }
 }
 
@@ -756,92 +798,106 @@ async fn save_pasted_image(
     app: AppHandle,
     image_data: String, // Base64 encoded
     extension: String,  // png, jpg, or gif
-    state: State<'_, AppState>
+    window: tauri::Window,
+    refactored_state: State<'_, RefactoredAppState>
 ) -> Result<String, String> {
     use chrono::Local;
     use base64::{Engine as _, engine::general_purpose};
     
     println!("📸 save_pasted_image called with extension: {}", extension);
     
-    let vault_lock = state.vault.lock().await;
-    
-    match &*vault_lock {
-        Some(vault) => {
-            let vault_path = vault.path();
-            
-            // Get vault settings to determine image location
-            let image_location = match vault_settings::get_vault_settings(app, vault_path.to_string_lossy().to_string()).await {
-                Ok(settings) => settings.files.image_location,
-                Err(_) => "files/".to_string() // Default location
-            };
-            
-            // Create image directory if it doesn't exist
-            let image_dir = vault_path.join(&image_location);
-            std::fs::create_dir_all(&image_dir)
-                .map_err(|e| format!("Failed to create image directory: {}", e))?;
-            
-            // Generate filename with timestamp
-            let timestamp = Local::now().format("%Y%m%d%H%M%S").to_string();
-            let filename = format!("Pasted image {}.{}", timestamp, extension);
-            let file_path = image_dir.join(&filename);
-            
-            println!("💾 Saving image to: {:?}", file_path);
-            
-            // Decode base64 and save file
-            let image_bytes = general_purpose::STANDARD.decode(&image_data)
-                .map_err(|e| format!("Failed to decode base64: {}", e))?;
-            
-            std::fs::write(&file_path, image_bytes)
-                .map_err(|e| format!("Failed to write image file: {}", e))?;
-            
-            // Return the relative path from vault root
-            let relative_path = format!("{}{}", image_location, filename);
-            println!("✅ Image saved successfully: {}", relative_path);
-            Ok(relative_path)
+    let window_id = extract_window_id(&window);
+
+    match refactored_state.get_window_state(&window_id).await {
+        Some(window_state) => {
+            let vault_lock = window_state.vault.lock().await;
+            match &*vault_lock {
+                Some(vault) => {
+                    let vault_path = vault.path();
+                    
+                    // Get vault settings to determine image location
+                    let image_location = match vault_settings::get_vault_settings(app, vault_path.to_string_lossy().to_string()).await {
+                        Ok(settings) => settings.files.image_location,
+                        Err(_) => "files/".to_string() // Default location
+                    };
+                    
+                    // Create image directory if it doesn't exist
+                    let image_dir = vault_path.join(&image_location);
+                    std::fs::create_dir_all(&image_dir)
+                        .map_err(|e| format!("Failed to create image directory: {}", e))?;
+                    
+                    // Generate filename with timestamp
+                    let timestamp = Local::now().format("%Y%m%d%H%M%S").to_string();
+                    let filename = format!("Pasted image {}.{}", timestamp, extension);
+                    let file_path = image_dir.join(&filename);
+                    
+                    println!("💾 Saving image to: {:?}", file_path);
+                    
+                    // Decode base64 and save file
+                    let image_bytes = general_purpose::STANDARD.decode(&image_data)
+                        .map_err(|e| format!("Failed to decode base64: {}", e))?;
+                    
+                    std::fs::write(&file_path, image_bytes)
+                        .map_err(|e| format!("Failed to write image file: {}", e))?;
+                    
+                    // Return the relative path from vault root
+                    let relative_path = format!("{}{}", image_location, filename);
+                    println!("✅ Image saved successfully: {}", relative_path);
+                    Ok(relative_path)
+                }
+                None => Err("No vault opened".to_string()),
+            }
         }
-        None => Err("No vault opened".to_string()),
+        None => Err("Window not found".to_string()),
     }
 }
 
 #[tauri::command]
 async fn read_image_as_base64(
     file_path: String,
-    state: State<'_, AppState>
+    window: tauri::Window,
+    refactored_state: State<'_, RefactoredAppState>
 ) -> Result<String, String> {
     use base64::{Engine as _, engine::general_purpose};
     
     println!("🖼️ read_image_as_base64 called with path: {}", file_path);
     
-    let vault_lock = state.vault.lock().await;
-    
-    match &*vault_lock {
-        Some(vault) => {
-            let full_path = vault.path().join(&file_path);
-            println!("📁 Reading image from: {:?}", full_path);
-            
-            // Read the file as bytes
-            let image_bytes = std::fs::read(&full_path)
-                .map_err(|e| format!("Failed to read image file: {}", e))?;
-            
-            // Determine content type from extension
-            let extension = full_path.extension()
-                .and_then(|ext| ext.to_str())
-                .unwrap_or("png")
-                .to_lowercase();
-            
-            let content_type = match extension.as_str() {
-                "jpg" | "jpeg" => "image/jpeg",
-                "png" => "image/png",
-                "gif" => "image/gif",
-                _ => "image/png"
-            };
-            
-            // Encode to base64
-            let base64_string = general_purpose::STANDARD.encode(&image_bytes);
-            
-            Ok(format!("data:{};base64,{}", content_type, base64_string))
+    let window_id = extract_window_id(&window);
+
+    match refactored_state.get_window_state(&window_id).await {
+        Some(window_state) => {
+            let vault_lock = window_state.vault.lock().await;
+            match &*vault_lock {
+                Some(vault) => {
+                    let full_path = vault.path().join(&file_path);
+                    println!("📁 Reading image from: {:?}", full_path);
+                    
+                    // Read the file as bytes
+                    let image_bytes = std::fs::read(&full_path)
+                        .map_err(|e| format!("Failed to read image file: {}", e))?;
+                    
+                    // Determine content type from extension
+                    let extension = full_path.extension()
+                        .and_then(|ext| ext.to_str())
+                        .unwrap_or("png")
+                        .to_lowercase();
+                    
+                    let content_type = match extension.as_str() {
+                        "jpg" | "jpeg" => "image/jpeg",
+                        "png" => "image/png",
+                        "gif" => "image/gif",
+                        _ => "image/png"
+                    };
+                    
+                    // Encode to base64
+                    let base64_string = general_purpose::STANDARD.encode(&image_bytes);
+                    
+                    Ok(format!("data:{};base64,{}", content_type, base64_string))
+                }
+                None => Err("No vault opened".to_string()),
+            }
         }
-        None => Err("No vault opened".to_string()),
+        None => Err("Window not found".to_string()),
     }
 }
 
@@ -868,11 +924,16 @@ async fn export_to_pdf(
     markdown_content: String,
     output_path: String,
     options: Option<ExportOptions>,
-    state: State<'_, AppState>
+    window: tauri::Window,
+    refactored_state: State<'_, RefactoredAppState>
 ) -> Result<(), String> {
     println!("📄 export_to_pdf called with output path: {}", output_path);
     
-    let vault_lock = state.vault.lock().await;
+    let window_id = extract_window_id(&window);
+
+    match refactored_state.get_window_state(&window_id).await {
+        Some(window_state) => {
+            let vault_lock = window_state.vault.lock().await;
     
     match &*vault_lock {
         Some(vault) => {
@@ -884,8 +945,11 @@ async fn export_to_pdf(
                 &PathBuf::from(&output_path),
                 export_options
             ).await
+                }
+                None => Err("No vault opened".to_string()),
+            }
         }
-        None => Err("No vault opened".to_string()),
+        None => Err("Window not found".to_string()),
     }
 }
 
@@ -894,11 +958,16 @@ async fn export_to_html(
     markdown_content: String,
     output_path: String,
     options: Option<ExportOptions>,
-    state: State<'_, AppState>
+    window: tauri::Window,
+    refactored_state: State<'_, RefactoredAppState>
 ) -> Result<(), String> {
     println!("📄 export_to_html called with output path: {}", output_path);
     
-    let vault_lock = state.vault.lock().await;
+    let window_id = extract_window_id(&window);
+
+    match refactored_state.get_window_state(&window_id).await {
+        Some(window_state) => {
+            let vault_lock = window_state.vault.lock().await;
     
     match &*vault_lock {
         Some(vault) => {
@@ -910,8 +979,11 @@ async fn export_to_html(
                 vault.path(),
                 export_options
             ).await
+                }
+                None => Err("No vault opened".to_string()),
+            }
         }
-        None => Err("No vault opened".to_string()),
+        None => Err("Window not found".to_string()),
     }
 }
 
@@ -920,11 +992,16 @@ async fn export_to_word(
     markdown_content: String,
     output_path: String,
     options: Option<ExportOptions>,
-    state: State<'_, AppState>
+    window: tauri::Window,
+    refactored_state: State<'_, RefactoredAppState>
 ) -> Result<(), String> {
     println!("📄 export_to_word called with output path: {}", output_path);
     
-    let vault_lock = state.vault.lock().await;
+    let window_id = extract_window_id(&window);
+
+    match refactored_state.get_window_state(&window_id).await {
+        Some(window_state) => {
+            let vault_lock = window_state.vault.lock().await;
     
     match &*vault_lock {
         Some(vault) => {
@@ -936,18 +1013,26 @@ async fn export_to_word(
                 vault.path(),
                 export_options
             ).await
+                }
+                None => Err("No vault opened".to_string()),
+            }
         }
-        None => Err("No vault opened".to_string()),
+        None => Err("Window not found".to_string()),
     }
 }
 
 #[tauri::command]
 async fn export_chat_to_vault(
-    state: State<'_, AppState>,
+    refactored_state: State<'_, RefactoredAppState>,
     content: String,
-    filename: Option<String>
+    filename: Option<String>,
+    window: tauri::Window
 ) -> Result<String, String> {
-    let vault_lock = state.vault.lock().await;
+    let window_id = extract_window_id(&window);
+
+    match refactored_state.get_window_state(&window_id).await {
+        Some(window_state) => {
+            let vault_lock = window_state.vault.lock().await;
     
     match &*vault_lock {
         Some(vault) => {
@@ -973,8 +1058,11 @@ async fn export_chat_to_vault(
                 .map_err(|e| format!("Failed to write chat file: {}", e))?;
             
             Ok(file_path.to_string_lossy().to_string())
+                }
+                None => Err("No vault opened".to_string()),
+            }
         }
-        None => Err("No vault is currently open".to_string()),
+        None => Err("Window not found".to_string()),
     }
 }
 
@@ -1038,6 +1126,8 @@ fn main() {
             open_vault,
             create_vault,
             get_vault_info,
+            get_window_state,
+            window_closing,
             start_file_watcher,
             select_folder_for_vault,
             select_folder_for_create,
@@ -1136,6 +1226,10 @@ fn main() {
             commands::search::batch_resolve_node_ids,
             commands::sync::calculate_note_id,
             commands::sync::get_vault_id,
+            // Window management commands
+            open_vault_in_new_window_basic,
+            get_recent_vaults_basic,
+            manage_vaults_basic,
         ])
         .setup(|app| {
             // Create MCP manager with app handle
@@ -1163,7 +1257,14 @@ fn main() {
             app.manage(mcp_manager);
             
             // Also manage Docker manager for Docker commands
-            app.manage(docker_manager);
+            app.manage(docker_manager.clone());
+            
+            // Create and manage RefactoredAppState for the new window system
+            let refactored_app_state = crate::refactored_app_state::RefactoredAppState::new(
+                docker_manager.clone(),
+                app.handle().clone()
+            ).expect("Failed to create RefactoredAppState");
+            app.manage(refactored_app_state);
             
             // Run AI settings migration on startup
             let app_handle = app.handle().clone();

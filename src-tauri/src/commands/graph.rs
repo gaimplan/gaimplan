@@ -1,7 +1,7 @@
-use tauri::State;
+use tauri::{State, Window};
 use crate::docker::SharedDockerManager;
 use crate::graph::{GraphManager, Note, GraphManagerImpl};
-use crate::AppState;
+use crate::{AppState, refactored_app_state::RefactoredAppState};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use serde::{Serialize, Deserialize};
@@ -22,16 +22,17 @@ async fn get_relationship_count(graph_manager: &Arc<dyn crate::graph::GraphManag
 
 #[tauri::command]
 pub async fn clear_graph_data(
+    window: Window,
     state: State<'_, AppState>,
+    refactored_state: State<'_, RefactoredAppState>,
 ) -> Result<String, String> {
     println!("=== CLEARING GRAPH DATA ===");
     
-    // Get current vault
-    let vault_guard = state.vault.lock().await;
-    let vault = vault_guard.as_ref()
+    // Get current vault from window state
+    let window_id = window.label();
+    let vault_path = refactored_state.get_window_vault_path(&window_id).await
         .ok_or_else(|| "No vault is currently open".to_string())?;
-    let vault_id = crate::vault_id::generate_vault_id(vault.path());
-    drop(vault_guard);
+    let vault_id = crate::vault_id::generate_vault_id(&vault_path);
     
     // Get the graph manager
     let graph_manager = state.graph_manager.lock().await;
@@ -72,7 +73,9 @@ pub async fn get_graph_services_status() -> Result<crate::docker::SharedDockerSt
 
 #[tauri::command]
 pub async fn sync_vault_to_graph(
+    window: Window,
     state: State<'_, AppState>,
+    refactored_state: State<'_, RefactoredAppState>,
     app_handle: tauri::AppHandle,
     skip_relationships: Option<bool>,
 ) -> Result<String, String> {
@@ -80,21 +83,23 @@ pub async fn sync_vault_to_graph(
     
     use std::sync::Arc;
     
-    // Get current vault
-    println!("Getting current vault...");
-    let vault_guard = state.vault.lock().await;
-    let vault = vault_guard.as_ref()
+    // Get current vault from window state
+    println!("Getting current vault from window...");
+    let window_id = window.label();
+    let vault_path = refactored_state.get_window_vault_path(&window_id).await
         .ok_or_else(|| {
-            println!("Error: No vault is currently open");
+            println!("Error: No vault is currently open for window {}", window_id);
             "No vault is currently open".to_string()
         })?;
     
-    let vault_arc = Arc::new(vault.clone());
-    let vault_name = vault_arc.path().file_name()
+    // Create vault object for compatibility
+    let vault = crate::vault::Vault::new(vault_path.clone())
+        .map_err(|e| format!("Failed to create vault: {}", e))?;
+    let vault_arc = Arc::new(vault);
+    let vault_name = vault_path.file_name()
         .and_then(|n| n.to_str())
         .unwrap_or("default")
         .to_string();
-    drop(vault_guard);
     
     // Get Docker connection info first
     println!("Getting Docker connection info...");
@@ -272,7 +277,9 @@ pub async fn graph_sync_status(
 #[tauri::command]
 pub async fn graph_enable_sync(
     enabled: bool,
+    window: Window,
     state: State<'_, AppState>,
+    refactored_state: State<'_, RefactoredAppState>,
 ) -> Result<(), String> {
     println!("🔄 graph_enable_sync called with: {}", enabled);
     
@@ -285,21 +292,19 @@ pub async fn graph_enable_sync(
                 e
             })?;
         
-        // Get vault info for connection
-        println!("Getting vault info...");
-        let vault_guard = state.vault.lock().await;
-        let vault = vault_guard.as_ref()
+        // Get vault info from window state
+        println!("Getting vault info from window...");
+        let window_id = window.label();
+        let vault_path = refactored_state.get_window_vault_path(&window_id).await
             .ok_or_else(|| {
-                println!("❌ No vault is currently open");
+                println!("❌ No vault is currently open for window {}", window_id);
                 "No vault is currently open".to_string()
             })?;
-        let vault_path = vault.path().to_path_buf();
         println!("Vault path: {:?}", vault_path);
         let vault_name = vault_path.file_name()
             .and_then(|n| n.to_str())
             .unwrap_or("default")
             .to_string();
-        drop(vault_guard);
         
         // Create new graph manager if needed or reconnect if disconnected
         let mut graph_lock = state.graph_manager.lock().await;

@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { qdrantSync } from '../sync/QdrantSync.js';
 import { mcpManager } from '../mcp/MCPManager.js';
+import { mcpSettingsPanel } from '../mcp/MCPSettingsPanel.js';
 
 export class GlobalSearch {
   constructor() {
@@ -23,6 +24,7 @@ export class GlobalSearch {
     // Create container
     this.container = document.createElement('div');
     this.container.className = 'global-search-overlay';
+    // Don't set display: none here - let show() control visibility
     this.container.style.cssText = `
       position: fixed;
       top: 0;
@@ -30,9 +32,11 @@ export class GlobalSearch {
       right: 0;
       bottom: 0;
       background: rgba(0, 0, 0, 0.5);
-      z-index: 100000;
-      display: none;
+      z-index: 2147483647;
       backdrop-filter: blur(4px);
+      pointer-events: auto;
+      visibility: hidden;
+      opacity: 0;
     `;
 
     // Create search panel
@@ -45,11 +49,13 @@ export class GlobalSearch {
       transform: translateX(-50%);
       width: 600px;
       max-width: 90vw;
-      background: var(--bg-primary);
-      border: 1px solid var(--border-color);
+      background: var(--bg-primary, #1e1e1e);
+      border: 1px solid var(--border-color, #333);
       border-radius: 8px;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
       overflow: hidden;
+      z-index: 2147483647;
+      pointer-events: auto;
     `;
 
     panel.innerHTML = `
@@ -551,11 +557,25 @@ export class GlobalSearch {
   }
 
   show() {
+    console.log('GlobalSearch.show() called, container exists:', !!this.container);
     if (!this.container) {
       this.mount();
     }
     
-    this.container.style.display = 'block';
+    // Force visibility with important styles to ensure it works after vault switches
+    this.container.style.setProperty('display', 'block', 'important');
+    this.container.style.setProperty('visibility', 'visible', 'important');
+    this.container.style.setProperty('opacity', '1', 'important');
+    this.container.style.setProperty('position', 'fixed', 'important');
+    this.container.style.setProperty('top', '0', 'important');
+    this.container.style.setProperty('left', '0', 'important');
+    this.container.style.setProperty('right', '0', 'important');
+    this.container.style.setProperty('bottom', '0', 'important');
+    this.container.style.setProperty('background', 'rgba(0, 0, 0, 0.5)', 'important');
+    this.container.style.setProperty('z-index', '2147483647', 'important');
+    this.container.style.setProperty('backdrop-filter', 'blur(4px)', 'important');
+    this.container.style.setProperty('pointer-events', 'auto', 'important');
+    
     this.isVisible = true;
     this.selectedIndex = -1;
     
@@ -569,12 +589,44 @@ export class GlobalSearch {
 
   hide() {
     if (this.container) {
-      this.container.style.display = 'none';
+      // First blur any focused element in the search panel to prevent focus issues
+      const activeElement = this.container.querySelector(':focus');
+      if (activeElement) {
+        activeElement.blur();
+      }
+      
+      this.container.style.setProperty('display', 'none', 'important');
+      this.container.style.setProperty('visibility', 'hidden', 'important');
+      this.container.style.setProperty('opacity', '0', 'important');
     }
+    this.isVisible = false;
+    
+    // Return focus to the editor to prevent any lingering focus issues
+    // Use a small delay to ensure the hide transition completes first
+    setTimeout(() => {
+      const activeTab = window.tabManager?.getActiveTab();
+      if (activeTab?.editor) {
+        activeTab.editor.focus();
+      }
+    }, 10);
+  }
+  
+  cleanup() {
+    console.log('GlobalSearch.cleanup() called');
+    // First hide if visible
+    if (this.isVisible) {
+      this.hide();
+    }
+    // Then remove from DOM
+    if (this.container && this.container.parentNode) {
+      this.container.parentNode.removeChild(this.container);
+    }
+    this.container = null;
     this.isVisible = false;
   }
 
   toggle() {
+    console.log('GlobalSearch.toggle() called, isVisible:', this.isVisible, 'container:', !!this.container);
     if (this.isVisible) {
       this.hide();
     } else {
@@ -777,6 +829,9 @@ export class GlobalSearch {
   }
 
   async handleSync() {
+    // This method syncs the current vault to Qdrant
+    // It first syncs the vault name to ensure Qdrant has the correct vault context
+    // Then syncs all the notes from the vault
     const syncBtn = this.container.querySelector('.sync-btn');
     const syncStatus = this.container.querySelector('.sync-status');
     
@@ -806,6 +861,21 @@ export class GlobalSearch {
     syncStatus.textContent = 'Preparing sync...';
     
     try {
+      // First sync vault name to ensure Qdrant has the correct vault context
+      syncStatus.textContent = 'Syncing vault name...';
+      try {
+        await mcpSettingsPanel.syncVaultNameForQdrant();
+        console.log('✓ Vault name synced successfully');
+      } catch (error) {
+        console.error('Failed to sync vault name:', error);
+        // Continue with sync even if vault name sync fails
+      }
+      
+      // Wait a moment for the server to restart if needed
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Now sync the vault contents
+      syncStatus.textContent = 'Preparing to sync notes...';
       const result = await qdrantSync.syncVaultToQdrant((progress) => {
         // Update progress in UI
         if (progress.status === 'loading_notes') {
@@ -849,6 +919,14 @@ export class GlobalSearch {
         syncStatus.style.display = 'none';
         syncStatus.style.color = '';
       }, 5000);
+      
+      // Refresh GraphSync status after successful sync
+      if (window.graphSyncStatus) {
+        console.log('🔄 Refreshing GraphSync status after sync completion');
+        setTimeout(() => {
+          window.graphSyncStatus.fetchStatus();
+        }, 1000); // Small delay to allow backend to process
+      }
       
     } catch (error) {
       console.error('Sync failed:', error);

@@ -14,6 +14,7 @@ import { QdrantClient } from "@qdrant/js-client-rest";
 import { pipeline, env } from "@xenova/transformers";
 import { createHash } from "crypto";
 import dotenv from "dotenv";
+import { getEmbeddingConfig } from "./config.js";
 
 dotenv.config();
 
@@ -25,43 +26,58 @@ class QdrantMCPServer {
   private server: Server;
   private qdrantClient: QdrantClient | null = null;
   private embeddingPipeline: any = null;
-  private embeddingDimension = 384; // all-MiniLM-L6-v2 embedding dimension
-  private embeddingModel = 'Xenova/all-MiniLM-L6-v2';
+  private embeddingDimension: number;
+  private embeddingModel: string;
+  private embeddingConfig = getEmbeddingConfig();
   private vaultId: string;
-  private collections = {
-    session_memory: {
-      vectorSize: this.embeddingDimension,
-      distance: "Cosine" as const,
-      description: "Session memory with vector embeddings for similarity search"
-    },
-    pattern_embeddings: {
-      vectorSize: this.embeddingDimension,
-      distance: "Cosine" as const,
-      description: "Pattern embeddings with links to Neo4j nodes"
-    },
-    cross_domain_knowledge: {
-      vectorSize: this.embeddingDimension,
-      distance: "Cosine" as const,
-      description: "Cross-domain knowledge transfer and synthesis opportunities"
-    },
-    meta_cognitive_insights: {
-      vectorSize: this.embeddingDimension,
-      distance: "Cosine" as const,
-      description: "Meta-cognitive insights for recursive improvement"
-    }
-  };
+  private collections: Record<string, { vectorSize: number; distance: "Cosine"; description: string }>;
 
   constructor() {
+    // Initialize embedding configuration
+    this.embeddingModel = this.embeddingConfig.modelName;
+    this.embeddingDimension = this.embeddingConfig.dimensions;
+    
     // Debug environment variables
     console.error(`🔍 Environment variables:`, {
       VAULT_NAME: process.env.VAULT_NAME,
       VAULT_ID: process.env.VAULT_ID,
-      QDRANT_URL: process.env.QDRANT_URL
+      QDRANT_URL: process.env.QDRANT_URL,
+      EMBEDDING_MODEL: process.env.EMBEDDING_MODEL || 'default'
+    });
+    
+    console.error(`🧠 Embedding Model Configuration:`, {
+      model: this.embeddingModel,
+      dimensions: this.embeddingDimension,
+      description: this.embeddingConfig.description
     });
     
     // Use vault name instead of ID for more readable collection names
     this.vaultId = process.env.VAULT_NAME || process.env.VAULT_ID || 'default';
     console.error(`🔑 Using vault identifier: ${this.vaultId}`);
+    
+    // Initialize collections with current embedding dimensions
+    this.collections = {
+      session_memory: {
+        vectorSize: this.embeddingDimension,
+        distance: "Cosine" as const,
+        description: "Session memory with vector embeddings for similarity search"
+      },
+      pattern_embeddings: {
+        vectorSize: this.embeddingDimension,
+        distance: "Cosine" as const,
+        description: "Pattern embeddings with links to Neo4j nodes"
+      },
+      cross_domain_knowledge: {
+        vectorSize: this.embeddingDimension,
+        distance: "Cosine" as const,
+        description: "Cross-domain knowledge transfer and synthesis opportunities"
+      },
+      meta_cognitive_insights: {
+        vectorSize: this.embeddingDimension,
+        distance: "Cosine" as const,
+        description: "Meta-cognitive insights for recursive improvement"
+      }
+    };
     
     this.server = new Server(
       {
@@ -140,10 +156,33 @@ class QdrantMCPServer {
     }
   }
 
+  private _generateHashEmbedding(text: string): number[] {
+    console.error("⚠️ Using hash-based fallback for embedding");
+    const hash = createHash("sha256").update(text).digest("hex");
+    const vector: number[] = [];
+
+    // Adjusted for 768 dimensions
+    for (let i = 0; i < Math.min(hash.length, this.embeddingDimension * 8); i += 8) {
+      const val = parseInt(hash.substring(i, i + 8), 16) / Math.pow(16, 8);
+      vector.push((val - 0.5) * 2);
+    }
+
+    // Pad or trim to correct dimension
+    while (vector.length < this.embeddingDimension) {
+      vector.push(0.0);
+    }
+    vector.length = this.embeddingDimension;
+
+    // Normalize vector
+    const norm = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
+    return norm > 0 ? vector.map((val) => val / norm) : vector;
+  }
+
   private async generateEmbedding(text: string): Promise<number[]> {
     try {
       if (this.embeddingPipeline) {
         // Use local sentence transformer model
+        // Note: Nomic AI model uses layer normalization
         const output = await this.embeddingPipeline(text, {
           pooling: 'mean',
           normalize: true,
@@ -167,30 +206,12 @@ class QdrantMCPServer {
         return embedding;
       } else {
         // Fallback: Hash-based embedding
-        const hash = createHash("sha256").update(text).digest("hex");
-        const vector: number[] = [];
-        
-        for (let i = 0; i < Math.min(hash.length, this.embeddingDimension * 8); i += 8) {
-          const val = parseInt(hash.substring(i, i + 8), 16) / Math.pow(16, 8);
-          vector.push((val - 0.5) * 2);
-        }
-        
-        // Pad or trim to correct dimension
-        while (vector.length < this.embeddingDimension) {
-          vector.push(0.0);
-        }
-        vector.length = this.embeddingDimension;
-        
-        // Normalize vector
-        const norm = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
-        return norm > 0 ? vector.map(val => val / norm) : vector;
+        return this._generateHashEmbedding(text);
       }
     } catch (error) {
       console.error("❌ Embedding generation failed:", error);
-      // Return random normalized vector as fallback
-      const randomVector = Array.from({ length: this.embeddingDimension }, () => Math.random() - 0.5);
-      const norm = Math.sqrt(randomVector.reduce((sum, val) => sum + val * val, 0));
-      return randomVector.map(val => val / norm);
+      // Fallback to deterministic hash-based embedding on error
+      return this._generateHashEmbedding(text);
     }
   }
 
@@ -719,6 +740,7 @@ ${idx + 1}. Relevance: ${result.score?.toFixed(3) || "N/A"}
 • Collections: ${collections.collections.length}
 • Embedding Model: ${this.embeddingPipeline ? `Local ${this.embeddingModel}` : "Hash-based (fallback)"}
 • Embedding Dimension: ${this.embeddingDimension}
+• Model Performance: ${this.embeddingConfig.performance}
 
 📚 Memory Collections (Vault: ${this.vaultId}):
 • Session Memory: ${collectionStats[`${this.vaultId}_session_memory`]?.points_count || 0} stored sessions

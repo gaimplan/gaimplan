@@ -1,85 +1,70 @@
 # Qdrant MCP Server
 
-Semantic memory system for Gaimplan using Qdrant vector database. This MCP server provides vector embeddings and semantic search capabilities to complement Neo4j's structured knowledge graph.
+A Model Context Protocol (MCP) server that provides semantic memory and pattern embeddings using Qdrant vector database.
 
-## Features
+## Embedding Model
 
-- **Session Memory**: Store and search conversation sessions with semantic similarity
-- **Pattern Embeddings**: Vector representations of patterns with Neo4j node links
-- **Cross-Domain Knowledge**: Discover synthesis opportunities across different domains
-- **Meta-Cognitive Insights**: Store recursive improvement insights
-- **Semantic Search**: Find similar content using vector embeddings
-- **Local Embeddings**: Uses sentence-transformers/all-MiniLM-L6-v2 model locally (no API required)
+This server now uses **Nomic AI's nomic-embed-text-v1.5** model by default, which provides:
+- 768-dimensional embeddings (vs 384 previously)
+- 13% better semantic quality in testing
+- Full ONNX support for Transformers.js
+- ~5.4ms inference time per embedding
+
+### Model Configuration
+
+You can configure the embedding model using the `EMBEDDING_MODEL` environment variable:
+
+```bash
+# Use the new Nomic AI model (default)
+EMBEDDING_MODEL=nomic-ai/nomic-embed-text-v1.5
+
+# Use the previous lightweight model
+EMBEDDING_MODEL=Xenova/all-MiniLM-L6-v2
+```
+
+### Breaking Change Notice
+
+⚠️ **Important**: The change from 384 to 768 dimensions means existing embeddings are incompatible. Users must re-sync their vaults after updating.
 
 ## Installation
 
 ```bash
-cd mcp-servers/qdrant-server
 npm install
 npm run build
 ```
 
-## Configuration
+## Usage
 
-1. Copy `.env.example` to `.env`
-2. Configure your settings:
-   - `QDRANT_URL`: Qdrant server URL (default: http://localhost:6333)
-   - `TRANSFORMERS_CACHE`: Directory for cached embedding models (default: ./models)
+The server is typically run via MCP integration in Gaimplan. It requires:
+- Qdrant running (default: http://localhost:6333)
+- Environment variables for vault configuration
 
-## Running Qdrant
+## Environment Variables
 
-```bash
-# Using Docker
-docker run -p 6333:6333 -p 6334:6334 \
-    -v $(pwd)/qdrant_storage:/qdrant/storage:z \
-    qdrant/qdrant
-```
-
-## Available Tools
-
-### store_session_memory
-Store conversation sessions with vector embeddings for similarity search.
-
-### search_similar_sessions
-Find semantically similar past sessions using vector search.
-
-### store_pattern_embedding
-Store patterns with vector representation and Neo4j node links.
-
-### search_semantic_patterns
-Find semantically similar patterns across domains.
-
-### discover_synthesis_opportunities
-Find potential cross-domain synthesis opportunities.
-
-### get_qdrant_status
-Get the current status of the Qdrant semantic memory system.
+- `QDRANT_URL`: Qdrant server URL (default: http://localhost:6333)
+- `VAULT_NAME`: Name of the current vault
+- `VAULT_ID`: ID of the current vault (fallback if VAULT_NAME not set)
+- `EMBEDDING_MODEL`: Embedding model to use (default: nomic-ai/nomic-embed-text-v1.5)
+- `TRANSFORMERS_CACHE`: Local cache directory for models (default: ./models)
 
 ## Development
 
 ```bash
-# Watch mode for development
+# Run tests
+npm test
+
+# Run with watch mode
 npm run dev
-
-# Build TypeScript
-npm run build
-
-# Start production server
-npm start
 ```
 
-## Integration with Gaimplan
+## Testing
 
-Add to your MCP settings:
+The server includes comprehensive tests for model compatibility:
 
-```json
-{
-  "qdrant": {
-    "command": "node",
-    "args": ["./mcp-servers/qdrant-server/dist/index.js"],
-    "env": {
-      "QDRANT_URL": "http://localhost:6333"
-    }
-  }
-}
+```bash
+# Run all tests
+npm test
+
+# Run integration tests (requires network for model download)
+EMBEDDING_MODEL=nomic-ai/nomic-embed-text-v1.5 npm test -- --testPathPattern=integration
 ```

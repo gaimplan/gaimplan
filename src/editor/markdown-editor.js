@@ -12,6 +12,7 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { languages } from '@codemirror/language-data'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { invoke } from '@tauri-apps/api/core'
+import { search, searchKeymap, highlightSelectionMatches, openSearchPanel, closeSearchPanel } from '@codemirror/search'
 import { livePreviewPlugin, livePreviewStyles } from './live-preview.js'
 import { inlineFormattingExtension, inlineFormattingStyles, blockWidgetExtension } from './formatting-extension.js'
 import { imageEmbedPlugin } from './image-extension.js'
@@ -126,10 +127,23 @@ export class MarkdownEditor {
       // Bullet list continuation on Enter (must come before default keymaps)
       bulletListExtension(),
       
+      // Custom keymap to override Cmd+F for GlobalSearch
+      keymap.of([
+        {
+          key: "Mod-f",
+          run: () => {
+            // Prevent CodeMirror's search from opening
+            // GlobalSearch will be handled by the global keyboard handler
+            return true; // Return true to indicate we handled it
+          }
+        }
+      ]),
+      
       // Default keymaps
       keymap.of([
         ...closeBracketsKeymap,
         ...defaultKeymap,
+        ...searchKeymap,
         ...historyKeymap,
         ...completionKeymap,
         ...lintKeymap
@@ -145,6 +159,15 @@ export class MarkdownEditor {
       // Enhanced live preview - both plugin and styles
       livePreviewPlugin,
       livePreviewStyles,
+      
+      // Search functionality
+      search({
+        top: true, // Show search panel at the top
+        caseSensitive: false,
+        literal: false,
+        wholeWord: false
+      }),
+      highlightSelectionMatches(),
       
       // Extension to handle all inline formatting (bold, italic, underline, headings)
       inlineFormattingExtension,
@@ -527,6 +550,7 @@ export class MarkdownEditor {
       // to ensure they work even when editor doesn't have focus
       { key: "Mod-Shift-k", run: () => { this.togglePreview(); return true }},
       { key: "Mod-Shift-h", run: (view) => summarizeHighlightsCommand(view) }
+      // Cmd+Shift+F is handled at document level in main.js to ensure it works
     ]
   }
 
@@ -1035,6 +1059,20 @@ export class MarkdownEditor {
   togglePreview() {
     // Preview functionality can be implemented later
     console.log('Preview toggle not implemented yet')
+  }
+
+  // Open search panel
+  openSearch() {
+    if (this.view) {
+      openSearchPanel(this.view);
+    }
+  }
+  
+  // Close search panel
+  closeSearch() {
+    if (this.view) {
+      closeSearchPanel(this.view);
+    }
   }
 
   // Utility methods

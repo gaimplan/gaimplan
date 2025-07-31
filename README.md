@@ -60,6 +60,39 @@ This isn't "ChatGPT in a notes app." It's the missing infrastructure for human-A
 - Ask AI: "How should we position our next feature?"
 - AI synthesizes: Your exact customer pain points, your architectural constraints, and competitive gaps—not generic product advice
 
+## ⌨️ Keyboard Shortcuts
+
+### Essential Shortcuts
+- **Cmd+F** - Global search across all notes (semantic + keyword hybrid search)
+- **Cmd+Shift+F** - Local text search within current note
+- **Cmd+N** - Create new note
+- **Cmd+W** - Close current tab
+- **Cmd+[1-9]** - Switch to tab by number
+- **Cmd+,** - Open preferences
+- **Cmd+/** - Toggle comment in code blocks
+
+### Multi-Vault Features
+- **Multiple Windows** - Work with different vaults simultaneously
+- **Automatic Sync** - Knowledge graph and semantic search activate automatically on vault open
+- **Vault Isolation** - Each vault maintains separate context and search indices
+
+## 🆕 Recent Updates (July 31, 2025)
+
+### Enhanced Multi-Vault Support
+- **Fixed Critical Issues**: Resolved "No vault is currently open" errors across graph sync and search
+- **Automatic Initialization**: Knowledge graph and semantic search now activate automatically on vault open
+- **Window State Management**: Proper vault context isolation for multi-window workflows
+
+### Improved Search Experience
+- **GlobalSearch Stability**: Fixed Cmd+F breaking after vault switches
+- **Local Text Search**: Added Cmd+Shift+F for searching within current note
+- **Keyboard Shortcut Separation**: Fixed conflict between global and local search shortcuts
+
+### Upgraded Semantic Understanding
+- **Advanced Embeddings**: Migrated to nomic-ai/nomic-embed-text-v1.5 (768 dimensions)
+- **Extended Descriptions**: Increased content processing limit to 2000 characters
+- **Better Context Quality**: Superior semantic search with larger embedding dimensions
+
 ## 🚀 Getting Started (Beta)
 
 Gaimplan is open source and we welcome contributions!
@@ -153,6 +186,7 @@ Your context vault is yours. Forever.
 
 ## 📚 Documentation
 
+- [User Guide](docs/USER_GUIDE.md) - Complete guide to using Gaimplan's features including multi-vault windows
 - [MCP Integration Guide](.docs/MCP_INTEGRATION.md) - Deep dive into our Model Context Protocol implementation
 - [Development Guide](.docs/PRD.md) - Architecture and contribution guidelines
 - [Data Storage Guide](.docs/DATA_STORAGE.md) - Understanding your context vault structure
@@ -164,11 +198,15 @@ Your context vault is yours. Forever.
 *   **🤖 Multi-Agent Memory:** Persistent contexts across AI providers
 *   **🔧 MCP Native:** Full Model Context Protocol integration
 *   **📓 Progressive Capture:** Daily notes with context accumulation
+*   **🪟 Multi-Vault Windows:** Work with multiple knowledge vaults simultaneously in separate windows
+*   **🔍 Enhanced Search:** Global search (Cmd+F) with stability fixes and local text search (Cmd+Shift+F)
+*   **🧬 Advanced Embeddings:** Upgraded to nomic-ai/nomic-embed-text-v1.5 (768 dimensions) for better semantic understanding
 
 ### 🚧 Building Now
 *   **🖥️ Terminal Mode:** Direct integration with Claude Code/Gemini Code
 *   **✏️ Context Editing:** AI modifies notes based on conversation insights
 *   **👥 Entity Intelligence:** Track people, projects, and contexts with AI-aware status
+*   **🔄 Database Isolation:** Per-vault Neo4j and Qdrant instances for complete vault separation
 
 ### 🚀 The Horizon
 *   **📱 Mobile Context:** iOS app for capturing context on the go

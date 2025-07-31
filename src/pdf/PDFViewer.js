@@ -3,6 +3,7 @@
 
 import * as pdfjsLib from 'pdfjs-dist';
 import { invoke } from '@tauri-apps/api/core';
+import windowContext from '../contexts/WindowContext.js';
 
 // Configure PDF.js worker - use local worker to avoid CDN issues
 // The worker is copied to public directory during build
@@ -178,8 +179,8 @@ export async function loadPDF(urlOrPath, filePath = null) {
           console.log('Trying alternative file reading approach...');
           // Extract relative path from full path if needed
           let relativePath = filePath;
-          if (window.currentVaultPath && filePath.startsWith(window.currentVaultPath)) {
-            relativePath = filePath.substring(window.currentVaultPath.length + 1);
+          if (windowContext.vaultPath && filePath.startsWith(windowContext.vaultPath)) {
+            relativePath = filePath.substring(windowContext.vaultPath.length + 1);
           }
           
           console.log('Reading via read_image_as_base64 with relative path:', relativePath);

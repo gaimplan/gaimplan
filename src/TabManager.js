@@ -26,6 +26,11 @@ export class TabManager {
             'tabs-reordered': [],
             'tab-navigated': []
         };
+        
+        // Register with window context if available
+        if (window.windowContext) {
+            window.windowContext.registerComponent('tabManager', this);
+        }
     }
     
     /**
@@ -455,5 +460,28 @@ export class TabManager {
     async restoreState(state) {
         // Implementation for restoring tabs from saved state
         // Will be implemented when we add persistence
+    }
+    
+    /**
+     * Cleanup method for window shutdown
+     */
+    async cleanup() {
+        console.log('🧹 Cleaning up TabManager');
+        
+        // Close all tabs
+        const tabIds = [...this.tabs.keys()];
+        for (const tabId of tabIds) {
+            await this.closeTab(tabId, true);
+        }
+        
+        // Clear listeners
+        for (const event in this.listeners) {
+            this.listeners[event] = [];
+        }
+        
+        // Clear state
+        this.tabs.clear();
+        this.tabOrder = [];
+        this.activeTabId = null;
     }
 }

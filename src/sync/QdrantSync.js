@@ -227,7 +227,7 @@ export class QdrantSync {
     
     // Clean and validate the data
     const cleanTitle = this.cleanText(note.title).substring(0, 100);
-    const cleanDescription = this.cleanText(description).substring(0, 500);
+    const cleanDescription = this.cleanText(description).substring(0, 2000);
     
     // Ensure we have meaningful content for embedding
     const embeddingText = `${cleanTitle} ${cleanDescription}`.trim();
@@ -320,7 +320,7 @@ export class QdrantSync {
       description = cleanContent.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
     }
     
-    return description.substring(0, 500);
+    return description.substring(0, 2000);
   }
 
   /**

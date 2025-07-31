@@ -18,6 +18,7 @@ import {
   saveHighlights,
   extractHighlightsToMarkdown
 } from './PDFHighlightManager.js';
+import windowContext from '../contexts/WindowContext.js';
 
 // Import CSS for PDF viewer
 import './pdf-viewer.css';
@@ -177,8 +178,8 @@ export class PDFTab {
    */
   async initializePDF() {
     try {
-      // Get the vault path from the window object (set when vault is opened)
-      const vaultPath = window.currentVaultPath || '';
+      // Get the vault path from the WindowContext
+      const vaultPath = windowContext.vaultPath || '';
       
       // Construct the full path
       const fullPath = vaultPath ? 
